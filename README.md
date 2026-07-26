@@ -12,6 +12,33 @@
 
 兩者不是同一套資源，請勿混用 `original/agi` 與 `original/vga`。
 
+## 安裝（玩家）
+
+交付包只含中文化資料與打了中文 patch 的 ScummVM 執行檔，**不含遊戲本身**，
+請自行準備合法取得的原始遊戲資料。
+
+| 平台 | 檔案 | 內容 |
+|---|---|---|
+| Linux x86_64 | `pq1-cht-linux-x86_64.tar.gz` | 兩個 binary + 中文資料 |
+| Windows x86_64 | `pq1-cht-windows-x86_64.zip` | 兩個 exe + SDL2.dll + 中文資料 |
+| macOS universal | `pq1-cht-macos-universal.tar.gz` | arm64 + x86_64 雙弧 binary + 中文資料 |
+
+解開後依包內的 `安裝說明.txt` 操作，重點是兩版的啟動方式不同：
+
+```sh
+# 原版 Floppy DOS（AGI）：不要加 --language
+bin/scummvm-pq1-agi --extrapath=<本包>/game/agi --path=<你的遊戲資料夾>
+
+# VGA Remake（SCI）：要加 --language=tw
+bin/scummvm-pq1-sci --extrapath=<本包>/game/sci --language=tw --path=<你的遊戲資料夾>
+```
+
+AGI 版是以「`game/agi` 裡有沒有 `pq1_big5.fnt`」決定要不要開中文，不吃 `--language`；
+它在 ScummVM 走 fallback 偵測，target 語言設成非英文反而無法啟動。SCI 版則相反。
+
+包內附 `SHA256SUMS`，在包目錄下執行 `sha256sum -c SHA256SUMS`（macOS 用
+`shasum -a 256 -c SHA256SUMS`）可驗證檔案完整性。
+
 ## 安裝（開發版）
 
 1. 準備合法取得的原始遊戲資料；本專案不提供 `VOL.*`、`RESOURCE.*`、DOS 執行檔或 ROM。

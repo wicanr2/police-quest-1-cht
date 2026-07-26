@@ -1,34 +1,56 @@
 # PQ1 繁中化交接記錄
 
-所有建置與驗收均在 `pq1-tools` Docker container 內完成。
+## 目前狀態
 
-## 目前可重建
+- AGI Floppy DOS：2,816／3,177 筆翻譯。
+- SCI VGA Remake：3,566／3,667 筆翻譯。
+- 兩版 placeholder／Big5 validator 均 0 errors；未翻鍵的分類與理由見 `WORKLIST.md`，
+  全數是引擎符號或刻意保留的專名／代號，可翻的遊戲文字已翻完。
+- Linux 與 Windows 交付包已在本機建好並實跑驗證；macOS universal 走 CI。
 
-- AGI Floppy DOS：2,816／3,177 筆，Big5 與 hi-res 字型已產生。
-- SCI VGA Remake：3,566／3,667 筆，Big5 與 hi-res 字型已產生。
-- 兩版 headless loader、placeholder、Big5 validator 均通過（0 errors）。
-- 未翻鍵的分類與理由見 `WORKLIST.md`，全數是引擎符號或刻意保留的專名／代號。
+## 建置方式
 
-## 本輪修掉的引擎缺陷
+Linux 與 Windows 都在本機 Docker 建完，不佔 CI；只有 macOS 非借 runner 不可
+（Apple SDK 不能在 Linux 上交叉編譯）。
 
-AGI 的 `GfxMgr::loadChtResources()` 原本用 `loadPrefixedRaw(fontFile, 16)` 讀字型，但
-`tools/build_cht.py --size 15` 產生的 `pq1_big5.fnt` 每字只有 15 列。`loadPrefixedRaw`
-按 `2 + height*2` bytes 逐筆讀，高度對不上就逐筆錯位，只有偶然對齊的字查得到 glyph，
-其餘畫成空白（狀態列「得分：0 / 245」只顯示得出「得」）。SCI 端的 `GfxFontChinese`
-一直是 15，所以只有 AGI 中招。已把 AGI 改成 15 並重編 binary，patch 檔同步更新且
-`patch -p1 --dry-run` 對 upstream 乾淨套用。
+```sh
+# Linux（預設用 .build-{agi,sci}-src 增量 make；--clean 則從 pinned upstream 重建）
+docker compose -f docker/compose.yml run --rm pq1-tools sh tools/build_linux_release.sh
 
-同時，字型字集原本只從譯文 value 收集，漏掉只出現在引擎硬寫 UI 字串裡的字（如「擇」）。
-`build_cht.py` 與 `bake_hires_font.py` 已加 `ENGINE_UI_CHARS` 一律補烘，四個字型檔皆已驗證無缺字。
+# Windows（mingw-w64 交叉編譯，SDL2 用 libsdl-org 官方 mingw devel 包）
+docker compose -f docker/compose.yml run --rm pq1-mingw sh tools/build_windows_release.sh
 
-## 驗收證據
+# macOS universal
+gh workflow run build-cht-packages.yml
+```
 
-- AGI：`captures/pq1-agi-fontfix-*.png` — 狀態列「得分：0 / 245」「聲音：開」與警局走廊
-  中文訊息框皆完整渲染，逐格墨點掃描無空白格。
-- SCI：`captures/pq1-sci-v2-*.png` — 主選單中文與修復前逐字一致，無回歸。
-- loader 實測：`AGI-CHT: 載入 2816 則翻譯`、`CHT: loaded 3566 translation entries`。
+## 本輪修掉的缺陷
 
-## 下一步
+1. **AGI 狀態列只顯示得出「得」**：`loadPrefixedRaw(fontFile, 16)` 與 `build_cht.py --size 15`
+   產出的 15 列字型不符。`loadPrefixedRaw` 按 `2 + height*2` bytes 逐筆讀，高度對不上就
+   逐筆錯位，只有偶然對齊的字查得到 glyph。SCI 端一直是 15，只有 AGI 中招。
+2. **AGI 中英混雜**：`stringPrintf` 展開 `%m`／`%g` 子訊息時直接取原始英文，外層
+   `displayText` 只對拼接完成的整串查表，那串不是表裡的 key。改成展開前先各自查表。
+3. **字型缺引擎硬寫 UI 字**：字集只從譯文 value 收集，漏掉只出現在引擎硬寫字串裡的字
+   （如「擇」）。加 `ENGINE_UI_CHARS` 補烘。
+4. **SCI 訊息框裁切句尾**：`GfxText16::Size()` 量英文、`Box()` 畫中文，框開得太小。
+   在 `Size()` 加上同樣的查表。**此項尚未取得畫面證據**，見下。
+5. **`patches/fontchinese.cpp` 與實際編譯版本不一致**：版控是 `kBig5Width=12`／`kHiW=24`，
+   實際編的是 16／32。現行 hi-res 字型是 32×28，用版控那份重建會讀錯格式。
+6. **SHA256SUMS 記絕對路徑**：玩家解包後照說明校驗會全數 not found。改記相對路徑，
+   並改用可攜寫法（macOS 沒有 GNU `sha256sum`，只有 `shasum`）。
 
-沿 `CLAUDE-PQ1.md` 的 M4～M6 continue：NPC 對話、案件證物操作、失敗結局與 credits 的
-逐項 A/B 截圖，以及 Windows／macOS artifact。目前的 patch-only 包尚不可當成最終發布版。
+兩個 engine patch 已改為從「乾淨 pinned upstream vs 實際編譯樹」重新產生，並驗證
+`patch -p1 --dry-run` 乾淨套用、套用後每個檔案與 `.build-*-src` 逐檔完全一致。
+版控的 patch 與已驗證過的 binary 是同一份東西。
+
+## 下一位接手要注意的事
+
+- **SCI 裁切修正缺畫面證據**。headless 容器的滑鼠事件送不進 SCI，跳不過開場動畫
+  （試過 `run --rm` 短容器、長駐容器、debugger `room` 跳轉、長時間等待自然播完，
+  都不行；`room 269` 在這版是 `Script 269 not found`）。需要能操作真實滑鼠的環境重跑，
+  對照 `captures/pq1-sci-m4-99-wall-msg-truncated.png`。
+- macOS CI 踩過三個雷，都已修但值得記著：configure 用 uname 判 host CPU（x86_64 弧要
+  整個跑在 `arch -x86_64` 下否則 NEON 編不過）、Homebrew 只有 arm64 版 codec（要
+  `--disable-*` 全關）、macOS 沒有 `sha256sum`。
+- 其餘未走到的場景與已知限制列在 `WORKLIST.md`，不必重查。
