@@ -28,16 +28,29 @@
 | AGI 狀態列只顯示「得」 | `loadPrefixedRaw(fontFile, 16)` 與 15 列字型不符，逐筆錯位 | `captures/pq1-agi-fontfix-*.png` |
 | AGI 中英混雜 | `%m`／`%g` 展開子訊息時沒查翻譯表 | `captures/pq1-agi-mfix-02-locker.png` |
 | 存讀檔 UI 缺「擇」字 | 字型字集只從譯文收，漏掉引擎硬寫 UI 字串 | `ENGINE_UI_CHARS`，四個字型檔已驗證無缺字 |
-| SCI 訊息框裁切句尾 | `Size()` 量英文、`Box()` 畫中文 | 已修，**尚未取得畫面證據**（見下） |
+| SCI 訊息框裁切句尾 | `Size()` 量英文、`Box()` 畫中文 | `captures/pq1-sci-m4b-08`（同一畫面對照 `pq1-sci-m4-98`）、`-11`（6 行長句） |
+
+## headless 驗收方法（照做即可，別再自己摸索）
+
+SCI 的開場動畫在 headless 下跳不過去，但 debugger 的 `room` 指令已修成能真正換場，
+可從 intro 直接跳進任意合法房間。三個關鍵點（來源：kb `retro-avg-taiwanese-localization`）：
+
+1. **Xvfb 沒有 window manager**，`xdotool` 全域送事件無效。要
+   `WID=$(xdotool search --class scummvm | head -1)`，之後一律 `--window "$WID"`。
+2. **合法房號**看 `extract/dump-sci/script.*` 的編號，跳不存在的會 fatal 直接關遊戲。
+   遊戲場景集中在 10–67，另有 117、134、141、151–160 等。
+3. **同一個遊戲行程只能跳一次房**。跳第二次會 `GfxPorts::kernelSetActive was requested
+   to set invalid port id 3!` 然後黑屏。每換一個目標房間就重啟一次行程。
+
+進到房間後滑鼠完全正常（左右鍵、look／walk／hand 游標切換、物件互動都可用），
+只有 intro 期間無效。AGI 的 debugger `room` 只改變數不重繪，不能用這招，得實際走位；
+建議走到定點後存檔，之後用 `--save-slot=N` 當 checkpoint。
 
 ## 待驗收項目
 
-1. **SCI 訊息框裁切修正的畫面證據**。修正已套用（`Size()` 是唯一量測入口，
-   `kTextSize` 與 `GfxPaint16` 都經過它），但 headless 容器的滑鼠事件送不進 SCI、
-   跳不過開場動畫，三種方式都試過。需要能操作真實滑鼠的環境重跑，對照
-   `captures/pq1-sci-m4-99-wall-msg-truncated.png`（修正前只顯示「沒錯，是一」）。
-2. SCI 的 NPC 對話（Dooley 簡報、Laura Watts、Jack Cobb）、CHIPSTER 2000 查詢畫面、
-   失敗結局／死亡畫面未走到。
+1. SCI 的 CHIPSTER 2000 電腦查詢畫面（`警徽 :`／`單位 :`／`姓名 :` 欄位標籤的排版）。
+   內容在 `message.117`，room 117 是合法房號但這輪沒跳（給 agent 的清單漏列）。
+2. SCI 的 Dooley 簡報、Laura Watts、Jack Cobb 對話、失敗結局／死亡畫面。
 3. AGI 的置物櫃密碼 269 流程、交通攔查、撲克牌局未走到。
 4. AGI 跨 key 拼接句（通緝單、逮捕摘要、報紙剪報、方位／速度模板）的串接語序，
    已驗證的部分（失竊車輛播報）通順，其餘待確認。
