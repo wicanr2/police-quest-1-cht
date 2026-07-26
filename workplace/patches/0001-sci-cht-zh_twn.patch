@@ -1,6 +1,6 @@
 diff -urN b/engines/sci/console.cpp m/engines/sci/console.cpp
---- a/engines/sci/console.cpp	2026-07-26 16:38:41.447793964 +0000
-+++ b/engines/sci/console.cpp	2026-07-26 16:38:41.449734184 +0000
+--- a/engines/sci/console.cpp	2026-07-26 23:55:45.068673091 +0000
++++ b/engines/sci/console.cpp	2026-07-26 23:55:45.069600620 +0000
 @@ -1157,6 +1157,17 @@
  		Common::String roomNumberStr = argv[1];
  		int roomNumber = strtol(roomNumberStr.c_str(), nullptr, roomNumberStr.hasSuffix("h") ? 16 : 10);
@@ -20,8 +20,8 @@ diff -urN b/engines/sci/console.cpp m/engines/sci/console.cpp
  	}
  
 diff -urN b/engines/sci/engine/kstring.cpp m/engines/sci/engine/kstring.cpp
---- a/engines/sci/engine/kstring.cpp	2026-07-26 16:38:41.370036760 +0000
-+++ b/engines/sci/engine/kstring.cpp	2026-07-26 16:38:41.371406549 +0000
+--- a/engines/sci/engine/kstring.cpp	2026-07-26 23:55:45.072647786 +0000
++++ b/engines/sci/engine/kstring.cpp	2026-07-26 23:55:45.073756608 +0000
 @@ -207,6 +207,58 @@
  }
  
@@ -140,8 +140,8 @@ diff -urN b/engines/sci/engine/kstring.cpp m/engines/sci/engine/kstring.cpp
  				int extralen = strLength - slen;
  				assert((target - targetbuf) + extralen <= maxsize);
 diff -urN b/engines/sci/event.cpp m/engines/sci/event.cpp
---- a/engines/sci/event.cpp	2026-07-26 16:38:41.375742120 +0000
-+++ b/engines/sci/event.cpp	2026-07-26 16:38:41.376990636 +0000
+--- a/engines/sci/event.cpp	2026-07-26 23:55:45.076623259 +0000
++++ b/engines/sci/event.cpp	2026-07-26 23:55:45.077525962 +0000
 @@ -422,6 +422,16 @@
  		input.type = kSciEventKeyDown;
  	}
@@ -160,8 +160,8 @@ diff -urN b/engines/sci/event.cpp m/engines/sci/event.cpp
  }
  
 diff -urN b/engines/sci/graphics/cache.cpp m/engines/sci/graphics/cache.cpp
---- a/engines/sci/graphics/cache.cpp	2026-07-26 16:38:41.381340302 +0000
-+++ b/engines/sci/graphics/cache.cpp	2026-07-26 16:38:41.383379672 +0000
+--- a/engines/sci/graphics/cache.cpp	2026-07-26 23:55:45.080497022 +0000
++++ b/engines/sci/graphics/cache.cpp	2026-07-26 23:55:45.081450696 +0000
 @@ -30,6 +30,7 @@
  #include "sci/graphics/scifont.h"
  #include "sci/graphics/fontsjis.h"
@@ -182,8 +182,8 @@ diff -urN b/engines/sci/graphics/cache.cpp m/engines/sci/graphics/cache.cpp
  			_cachedFonts[fontId] = new GfxFontFromResource(_resMan, _screen, fontId);
  	}
 diff -urN b/engines/sci/graphics/menu.cpp m/engines/sci/graphics/menu.cpp
---- a/engines/sci/graphics/menu.cpp	2026-07-26 16:38:41.387876052 +0000
-+++ b/engines/sci/graphics/menu.cpp	2026-07-26 16:38:41.389482639 +0000
+--- a/engines/sci/graphics/menu.cpp	2026-07-26 23:55:45.084537068 +0000
++++ b/engines/sci/graphics/menu.cpp	2026-07-26 23:55:45.085291276 +0000
 @@ -363,10 +363,12 @@
  	_paint16->fillRect(_ports->_menuBarRect, 1, _screen->getColorWhite());
  	_paint16->fillRect(_ports->_menuLine, 1, 0);
@@ -213,8 +213,8 @@ diff -urN b/engines/sci/graphics/menu.cpp m/engines/sci/graphics/menu.cpp
  		int16 textWidth;
  		int16 textHeight;
 diff -urN b/engines/sci/graphics/paint16.cpp m/engines/sci/graphics/paint16.cpp
---- a/engines/sci/graphics/paint16.cpp	2026-07-26 16:38:41.392458474 +0000
-+++ b/engines/sci/graphics/paint16.cpp	2026-07-26 16:38:41.393793357 +0000
+--- a/engines/sci/graphics/paint16.cpp	2026-07-26 23:55:45.087921431 +0000
++++ b/engines/sci/graphics/paint16.cpp	2026-07-26 23:55:45.088856083 +0000
 @@ -19,6 +19,8 @@
   *
   */
@@ -289,9 +289,113 @@ diff -urN b/engines/sci/graphics/paint16.cpp m/engines/sci/graphics/paint16.cpp
  }
  
  // This one is the only one that updates screen!
+@@ -565,6 +618,80 @@
+ 		rect.moveTo(_ports->getPort()->curLeft, _ports->getPort()->curTop);
+ 	}
+ 
++	// Traditional Chinese fan translation: keep stacked kDisplay lines from
++	// colliding. Screens like PQ1's CHIPSTER terminal place each field with an
++	// absolute MOVEPEN, spaced for the 8px latin font. Size() now measures the
++	// Chinese string, so the box is taller than that spacing and consecutive
++	// labels overlap — glyphs literally touch, which Box() never does because it
++	// derives its own line height. Push a line down when it would run into the
++	// previous one, which lays the text out in the taller 640x400 space instead
++	// of shrinking the glyphs (see rulebook 81: don't shrink CJK).
++	// Only lines in the same column are considered, so the two-column layout of
++	// the terminal stays intact, and nothing moves when the text still fits.
++	// Restrict this to "label : value" field layouts (PQ1's CHIPSTER terminal).
++	// Those place a handful of fields with absolute MOVEPEN at a spacing meant for
++	// the 8px latin font, so Chinese labels collide and a small nudge fixes them.
++	// Dense lists — the 20-entry personnel roster — use the very same spacing, but
++	// 20 Chinese lines need more room than the 200px screen has, so nudging there
++	// only scatters the first rows and leaves the rest piled up where they were.
++	// The two cases are indistinguishable by geometry alone; the field separator
++	// is what tells them apart.
++	const bool isFieldLayout = Common::String(text).contains(" : ");
++	if (g_sci->getLanguage() == Common::ZH_TWN && isFieldLayout) {
++		const int16 scriptTop = rect.top;
++
++		// A line the script places above everything drawn so far means a new screen
++		// (or the top of a fresh layout), so the old boxes no longer constrain us.
++		bool startsNewLayout = true;
++		for (uint i = 0; i < _chtRecentTextRects.size(); ++i) {
++			if (scriptTop >= _chtRecentTextRects[i].scriptTop) {
++				startsNewLayout = false;
++				break;
++			}
++		}
++		if (startsNewLayout)
++			_chtRecentTextRects.clear();
++
++		// Push below every box this line would collide with, not just the last one.
++		// Order comes from the script positions; collision from the drawn boxes.
++		// Repeat until stable: moving down to clear one box can push us into
++		// another one that was checked earlier in the list.
++		int16 wantedTop = rect.top;
++		for (uint pass = 0; pass <= _chtRecentTextRects.size(); ++pass) {
++			const int16 before = wantedTop;
++			for (uint i = 0; i < _chtRecentTextRects.size(); ++i) {
++				const ChtTextSlot &prev = _chtRecentTextRects[i];
++				const bool sameColumn = rect.left < prev.rect.right && rect.right > prev.rect.left;
++				const bool comesAfter = scriptTop >= prev.scriptTop;
++				const bool wouldOverlap = wantedTop < prev.rect.bottom &&
++				                          wantedTop + rect.height() > prev.rect.top;
++				if (sameColumn && comesAfter && wouldOverlap)
++					wantedTop = MAX<int16>(wantedTop, prev.rect.bottom);
++			}
++			if (wantedTop == before)
++				break;
++		}
++		int16 push = wantedTop - rect.top;
++
++		// Never push text off the visible area; better slightly tight than gone.
++		if (rect.bottom + push > _screen->getHeight())
++			push = 0;
++		if (push > 0)
++			rect.translate(0, push);
++
++		debugC(2, kDebugLevelGraphics,
++		       "CHT kDisplay: '%.24s' script_top=%d rect=(%d,%d,%d,%d) push=%d",
++		       text, scriptTop, rect.left, rect.top, rect.right, rect.bottom, push);
++
++		ChtTextSlot slot;
++		slot.rect = rect;
++		slot.scriptTop = scriptTop;
++		_chtRecentTextRects.push_back(slot);
++		// Only the last handful can plausibly collide with what comes next.
++		if (_chtRecentTextRects.size() > 12)
++			_chtRecentTextRects.remove_at(0);
++	}
++
+ 	// Kawa's SCI11+
+ 	if (stroke)
+ 		rect.grow(1);
+diff -urN b/engines/sci/graphics/paint16.h m/engines/sci/graphics/paint16.h
+--- a/engines/sci/graphics/paint16.h	2026-07-26 23:55:45.124297714 +0000
++++ b/engines/sci/graphics/paint16.h	2026-07-26 23:55:45.124881121 +0000
+@@ -96,6 +96,19 @@
+ 	GfxText16 *_text16;
+ 	GfxTransitions *_transitions;
+ 
++	// Traditional Chinese fan translation: recent kDisplay text boxes, used to keep
++	// stacked lines from overlapping. Several are kept because multi-column screens
++	// interleave their columns (PQ1's CHIPSTER terminal draws left, right, left,
++	// right...), so the immediately preceding box is usually the other column and
++	// tells us nothing. `scriptTop` is where the script asked for the line and is
++	// what establishes the intended order — comparing against the already-pushed
++	// position would make a later line look like it belongs above an earlier one.
++	struct ChtTextSlot {
++		Common::Rect rect;
++		int16 scriptTop;
++	};
++	Common::Array<ChtTextSlot> _chtRecentTextRects;
++
+ 	// true means make EGA picture drawing visible
+ 	bool _EGAdrawingVisualize;
+ 
 diff -urN b/engines/sci/graphics/ports.cpp m/engines/sci/graphics/ports.cpp
---- a/engines/sci/graphics/ports.cpp	2026-07-26 16:38:41.397793402 +0000
-+++ b/engines/sci/graphics/ports.cpp	2026-07-26 16:38:41.399703583 +0000
+--- a/engines/sci/graphics/ports.cpp	2026-07-26 23:55:45.091635790 +0000
++++ b/engines/sci/graphics/ports.cpp	2026-07-26 23:55:45.092523817 +0000
 @@ -62,9 +62,13 @@
  	setPort(_menuPort);
  	_text16->SetFont(0);
@@ -310,8 +414,8 @@ diff -urN b/engines/sci/graphics/ports.cpp m/engines/sci/graphics/ports.cpp
  	_wmgrPort = new Port(1);
  	_windowsById.resize(2);
 diff -urN b/engines/sci/graphics/screen.cpp m/engines/sci/graphics/screen.cpp
---- a/engines/sci/graphics/screen.cpp	2026-07-26 16:38:41.404452182 +0000
-+++ b/engines/sci/graphics/screen.cpp	2026-07-26 16:38:41.405793492 +0000
+--- a/engines/sci/graphics/screen.cpp	2026-07-26 23:55:45.095434177 +0000
++++ b/engines/sci/graphics/screen.cpp	2026-07-26 23:55:45.096372170 +0000
 @@ -84,6 +84,14 @@
  		}
  	}
@@ -328,8 +432,8 @@ diff -urN b/engines/sci/graphics/screen.cpp m/engines/sci/graphics/screen.cpp
  	if (!_width)
  		_width = _scriptWidth;
 diff -urN b/engines/sci/graphics/screen.h m/engines/sci/graphics/screen.h
---- a/engines/sci/graphics/screen.h	2026-07-26 16:38:41.409793537 +0000
-+++ b/engines/sci/graphics/screen.h	2026-07-26 16:38:41.411440811 +0000
+--- a/engines/sci/graphics/screen.h	2026-07-26 23:55:45.098880877 +0000
++++ b/engines/sci/graphics/screen.h	2026-07-26 23:55:45.099880886 +0000
 @@ -78,6 +78,7 @@
  	uint16 getScriptHeight() { return _scriptHeight; }
  	uint16 getDisplayWidth() { return _displayWidth; }
@@ -339,8 +443,8 @@ diff -urN b/engines/sci/graphics/screen.h m/engines/sci/graphics/screen.h
  	byte getColorDefaultVectorData() { return _colorDefaultVectorData; }
  
 diff -urN b/engines/sci/graphics/text16.cpp m/engines/sci/graphics/text16.cpp
---- a/engines/sci/graphics/text16.cpp	2026-07-26 16:38:41.415807784 +0000
-+++ b/engines/sci/graphics/text16.cpp	2026-07-26 16:38:41.416995622 +0000
+--- a/engines/sci/graphics/text16.cpp	2026-07-26 23:55:45.102880915 +0000
++++ b/engines/sci/graphics/text16.cpp	2026-07-26 23:55:45.103995180 +0000
 @@ -303,7 +303,21 @@
  		// Break without spaces found, we split the very first word - may also be Kanji/Japanese
  
@@ -474,8 +578,8 @@ diff -urN b/engines/sci/graphics/text16.cpp m/engines/sci/graphics/text16.cpp
  		case 0:
  			break;
 diff -urN b/engines/sci/graphics/view.cpp m/engines/sci/graphics/view.cpp
---- a/engines/sci/graphics/view.cpp	2026-07-26 16:38:41.421535506 +0000
-+++ b/engines/sci/graphics/view.cpp	2026-07-26 16:38:41.422949868 +0000
+--- a/engines/sci/graphics/view.cpp	2026-07-26 23:55:45.106711516 +0000
++++ b/engines/sci/graphics/view.cpp	2026-07-26 23:55:45.107719531 +0000
 @@ -19,6 +19,8 @@
   *
   */
@@ -545,8 +649,8 @@ diff -urN b/engines/sci/graphics/view.cpp m/engines/sci/graphics/view.cpp
  
  	if (_embeddedPal)
 diff -urN b/engines/sci/graphics/view.h m/engines/sci/graphics/view.h
---- a/engines/sci/graphics/view.h	2026-07-26 16:38:41.427338293 +0000
-+++ b/engines/sci/graphics/view.h	2026-07-26 16:38:41.428888389 +0000
+--- a/engines/sci/graphics/view.h	2026-07-26 23:55:45.110371040 +0000
++++ b/engines/sci/graphics/view.h	2026-07-26 23:55:45.111129758 +0000
 @@ -75,6 +75,9 @@
  	uint16 getCelCount(int16 loopNo) const;
  	Palette *getPalette();
@@ -558,8 +662,8 @@ diff -urN b/engines/sci/graphics/view.h m/engines/sci/graphics/view.h
  
  	void adjustToUpscaledCoordinates(int16 &y, int16 &x);
 diff -urN b/engines/sci/module.mk m/engines/sci/module.mk
---- a/engines/sci/module.mk	2026-07-26 16:38:41.432626254 +0000
-+++ b/engines/sci/module.mk	2026-07-26 16:38:41.433781592 +0000
+--- a/engines/sci/module.mk	2026-07-26 23:55:45.113566539 +0000
++++ b/engines/sci/module.mk	2026-07-26 23:55:45.114340144 +0000
 @@ -48,6 +48,7 @@
  	graphics/controls16.o \
  	graphics/coordadjuster.o \
@@ -569,8 +673,8 @@ diff -urN b/engines/sci/module.mk m/engines/sci/module.mk
  	graphics/fontsjis.o \
  	graphics/macfont.o \
 diff -urN b/engines/sci/sci.cpp m/engines/sci/sci.cpp
---- a/engines/sci/sci.cpp	2026-07-26 16:38:41.437906481 +0000
-+++ b/engines/sci/sci.cpp	2026-07-26 16:38:41.438793863 +0000
+--- a/engines/sci/sci.cpp	2026-07-26 23:55:45.116881046 +0000
++++ b/engines/sci/sci.cpp	2026-07-26 23:55:45.118006081 +0000
 @@ -19,7 +19,11 @@
   *
   */
@@ -819,8 +923,8 @@ diff -urN b/engines/sci/sci.cpp m/engines/sci/sci.cpp
  	if (!msecs) {
  		return;
 diff -urN b/engines/sci/sci.h m/engines/sci/sci.h
---- a/engines/sci/sci.h	2026-07-26 16:38:41.442793908 +0000
-+++ b/engines/sci/sci.h	2026-07-26 16:38:41.444435866 +0000
+--- a/engines/sci/sci.h	2026-07-26 23:55:45.120673195 +0000
++++ b/engines/sci/sci.h	2026-07-26 23:55:45.121514650 +0000
 @@ -26,6 +26,8 @@
  #include "common/macresman.h"
  #include "common/util.h"
