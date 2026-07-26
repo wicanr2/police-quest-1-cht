@@ -1,6 +1,27 @@
+diff -urN b/engines/sci/console.cpp m/engines/sci/console.cpp
+--- a/engines/sci/console.cpp	2026-07-26 16:38:41.447793964 +0000
++++ b/engines/sci/console.cpp	2026-07-26 16:38:41.449734184 +0000
+@@ -1157,6 +1157,17 @@
+ 		Common::String roomNumberStr = argv[1];
+ 		int roomNumber = strtol(roomNumberStr.c_str(), nullptr, roomNumberStr.hasSuffix("h") ? 16 : 10);
+ 		_engine->_gamestate->setRoomNumber(roomNumber);
++
++		// Setting the global alone does not move the game: whatever script is
++		// currently running keeps its VM loop, so during a blocking sequence
++		// (the intro animation, for instance) nothing happens. Reuse the path a
++		// savegame restore takes — abort the current script processing and drop
++		// any leftover windows — so the room change actually takes effect.
++		// Needed to reach arbitrary scenes for headless Chinese-text screenshots.
++		_engine->_gamestate->abortScriptProcessing = kAbortLoadGame;
++		if (_engine->_gfxPorts)
++			_engine->_gfxPorts->reset();
++
+ 		debugPrintf("Room number changed to %d (%x in hex)\n", roomNumber, roomNumber);
+ 	}
+ 
 diff -urN b/engines/sci/engine/kstring.cpp m/engines/sci/engine/kstring.cpp
---- a/engines/sci/engine/kstring.cpp	2026-07-26 14:21:49.697762937 +0000
-+++ b/engines/sci/engine/kstring.cpp	2026-07-26 14:21:49.702847369 +0000
+--- a/engines/sci/engine/kstring.cpp	2026-07-26 16:38:41.370036760 +0000
++++ b/engines/sci/engine/kstring.cpp	2026-07-26 16:38:41.371406549 +0000
 @@ -207,6 +207,58 @@
  }
  
@@ -119,8 +140,8 @@ diff -urN b/engines/sci/engine/kstring.cpp m/engines/sci/engine/kstring.cpp
  				int extralen = strLength - slen;
  				assert((target - targetbuf) + extralen <= maxsize);
 diff -urN b/engines/sci/event.cpp m/engines/sci/event.cpp
---- a/engines/sci/event.cpp	2026-07-26 14:21:50.154751510 +0000
-+++ b/engines/sci/event.cpp	2026-07-26 14:21:50.162641892 +0000
+--- a/engines/sci/event.cpp	2026-07-26 16:38:41.375742120 +0000
++++ b/engines/sci/event.cpp	2026-07-26 16:38:41.376990636 +0000
 @@ -422,6 +422,16 @@
  		input.type = kSciEventKeyDown;
  	}
@@ -139,8 +160,8 @@ diff -urN b/engines/sci/event.cpp m/engines/sci/event.cpp
  }
  
 diff -urN b/engines/sci/graphics/cache.cpp m/engines/sci/graphics/cache.cpp
---- a/engines/sci/graphics/cache.cpp	2026-07-26 14:21:49.727948539 +0000
-+++ b/engines/sci/graphics/cache.cpp	2026-07-26 14:21:49.737476226 +0000
+--- a/engines/sci/graphics/cache.cpp	2026-07-26 16:38:41.381340302 +0000
++++ b/engines/sci/graphics/cache.cpp	2026-07-26 16:38:41.383379672 +0000
 @@ -30,6 +30,7 @@
  #include "sci/graphics/scifont.h"
  #include "sci/graphics/fontsjis.h"
@@ -161,8 +182,8 @@ diff -urN b/engines/sci/graphics/cache.cpp m/engines/sci/graphics/cache.cpp
  			_cachedFonts[fontId] = new GfxFontFromResource(_resMan, _screen, fontId);
  	}
 diff -urN b/engines/sci/graphics/menu.cpp m/engines/sci/graphics/menu.cpp
---- a/engines/sci/graphics/menu.cpp	2026-07-26 14:21:49.775837908 +0000
-+++ b/engines/sci/graphics/menu.cpp	2026-07-26 14:21:49.873640824 +0000
+--- a/engines/sci/graphics/menu.cpp	2026-07-26 16:38:41.387876052 +0000
++++ b/engines/sci/graphics/menu.cpp	2026-07-26 16:38:41.389482639 +0000
 @@ -363,10 +363,12 @@
  	_paint16->fillRect(_ports->_menuBarRect, 1, _screen->getColorWhite());
  	_paint16->fillRect(_ports->_menuLine, 1, 0);
@@ -192,8 +213,8 @@ diff -urN b/engines/sci/graphics/menu.cpp m/engines/sci/graphics/menu.cpp
  		int16 textWidth;
  		int16 textHeight;
 diff -urN b/engines/sci/graphics/paint16.cpp m/engines/sci/graphics/paint16.cpp
---- a/engines/sci/graphics/paint16.cpp	2026-07-26 14:21:49.755560576 +0000
-+++ b/engines/sci/graphics/paint16.cpp	2026-07-26 14:21:49.763001226 +0000
+--- a/engines/sci/graphics/paint16.cpp	2026-07-26 16:38:41.392458474 +0000
++++ b/engines/sci/graphics/paint16.cpp	2026-07-26 16:38:41.393793357 +0000
 @@ -19,6 +19,8 @@
   *
   */
@@ -269,8 +290,8 @@ diff -urN b/engines/sci/graphics/paint16.cpp m/engines/sci/graphics/paint16.cpp
  
  // This one is the only one that updates screen!
 diff -urN b/engines/sci/graphics/ports.cpp m/engines/sci/graphics/ports.cpp
---- a/engines/sci/graphics/ports.cpp	2026-07-26 14:21:49.898562223 +0000
-+++ b/engines/sci/graphics/ports.cpp	2026-07-26 14:21:49.908562338 +0000
+--- a/engines/sci/graphics/ports.cpp	2026-07-26 16:38:41.397793402 +0000
++++ b/engines/sci/graphics/ports.cpp	2026-07-26 16:38:41.399703583 +0000
 @@ -62,9 +62,13 @@
  	setPort(_menuPort);
  	_text16->SetFont(0);
@@ -289,8 +310,8 @@ diff -urN b/engines/sci/graphics/ports.cpp m/engines/sci/graphics/ports.cpp
  	_wmgrPort = new Port(1);
  	_windowsById.resize(2);
 diff -urN b/engines/sci/graphics/screen.cpp m/engines/sci/graphics/screen.cpp
---- a/engines/sci/graphics/screen.cpp	2026-07-26 14:21:49.931509540 +0000
-+++ b/engines/sci/graphics/screen.cpp	2026-07-26 14:21:49.939562695 +0000
+--- a/engines/sci/graphics/screen.cpp	2026-07-26 16:38:41.404452182 +0000
++++ b/engines/sci/graphics/screen.cpp	2026-07-26 16:38:41.405793492 +0000
 @@ -84,6 +84,14 @@
  		}
  	}
@@ -307,8 +328,8 @@ diff -urN b/engines/sci/graphics/screen.cpp m/engines/sci/graphics/screen.cpp
  	if (!_width)
  		_width = _scriptWidth;
 diff -urN b/engines/sci/graphics/screen.h m/engines/sci/graphics/screen.h
---- a/engines/sci/graphics/screen.h	2026-07-26 14:21:49.959562925 +0000
-+++ b/engines/sci/graphics/screen.h	2026-07-26 14:21:49.966832565 +0000
+--- a/engines/sci/graphics/screen.h	2026-07-26 16:38:41.409793537 +0000
++++ b/engines/sci/graphics/screen.h	2026-07-26 16:38:41.411440811 +0000
 @@ -78,6 +78,7 @@
  	uint16 getScriptHeight() { return _scriptHeight; }
  	uint16 getDisplayWidth() { return _displayWidth; }
@@ -318,8 +339,8 @@ diff -urN b/engines/sci/graphics/screen.h m/engines/sci/graphics/screen.h
  	byte getColorDefaultVectorData() { return _colorDefaultVectorData; }
  
 diff -urN b/engines/sci/graphics/text16.cpp m/engines/sci/graphics/text16.cpp
---- a/engines/sci/graphics/text16.cpp	2026-07-26 14:21:49.986580819 +0000
-+++ b/engines/sci/graphics/text16.cpp	2026-07-26 14:21:49.992563305 +0000
+--- a/engines/sci/graphics/text16.cpp	2026-07-26 16:38:41.415807784 +0000
++++ b/engines/sci/graphics/text16.cpp	2026-07-26 16:38:41.416995622 +0000
 @@ -303,7 +303,21 @@
  		// Break without spaces found, we split the very first word - may also be Kanji/Japanese
  
@@ -453,8 +474,8 @@ diff -urN b/engines/sci/graphics/text16.cpp m/engines/sci/graphics/text16.cpp
  		case 0:
  			break;
 diff -urN b/engines/sci/graphics/view.cpp m/engines/sci/graphics/view.cpp
---- a/engines/sci/graphics/view.cpp	2026-07-26 14:21:50.022039197 +0000
-+++ b/engines/sci/graphics/view.cpp	2026-07-26 14:21:50.026592891 +0000
+--- a/engines/sci/graphics/view.cpp	2026-07-26 16:38:41.421535506 +0000
++++ b/engines/sci/graphics/view.cpp	2026-07-26 16:38:41.422949868 +0000
 @@ -19,6 +19,8 @@
   *
   */
@@ -524,8 +545,8 @@ diff -urN b/engines/sci/graphics/view.cpp m/engines/sci/graphics/view.cpp
  
  	if (_embeddedPal)
 diff -urN b/engines/sci/graphics/view.h m/engines/sci/graphics/view.h
---- a/engines/sci/graphics/view.h	2026-07-26 14:21:50.051563984 +0000
-+++ b/engines/sci/graphics/view.h	2026-07-26 14:21:50.083820058 +0000
+--- a/engines/sci/graphics/view.h	2026-07-26 16:38:41.427338293 +0000
++++ b/engines/sci/graphics/view.h	2026-07-26 16:38:41.428888389 +0000
 @@ -75,6 +75,9 @@
  	uint16 getCelCount(int16 loopNo) const;
  	Palette *getPalette();
@@ -537,8 +558,8 @@ diff -urN b/engines/sci/graphics/view.h m/engines/sci/graphics/view.h
  
  	void adjustToUpscaledCoordinates(int16 &y, int16 &x);
 diff -urN b/engines/sci/module.mk m/engines/sci/module.mk
---- a/engines/sci/module.mk	2026-07-26 14:21:50.109564652 +0000
-+++ b/engines/sci/module.mk	2026-07-26 14:21:50.130564894 +0000
+--- a/engines/sci/module.mk	2026-07-26 16:38:41.432626254 +0000
++++ b/engines/sci/module.mk	2026-07-26 16:38:41.433781592 +0000
 @@ -48,6 +48,7 @@
  	graphics/controls16.o \
  	graphics/coordadjuster.o \
@@ -548,8 +569,8 @@ diff -urN b/engines/sci/module.mk m/engines/sci/module.mk
  	graphics/fontsjis.o \
  	graphics/macfont.o \
 diff -urN b/engines/sci/sci.cpp m/engines/sci/sci.cpp
---- a/engines/sci/sci.cpp	2026-07-26 14:21:50.208723127 +0000
-+++ b/engines/sci/sci.cpp	2026-07-26 14:21:50.211565827 +0000
+--- a/engines/sci/sci.cpp	2026-07-26 16:38:41.437906481 +0000
++++ b/engines/sci/sci.cpp	2026-07-26 16:38:41.438793863 +0000
 @@ -19,7 +19,11 @@
   *
   */
@@ -798,8 +819,8 @@ diff -urN b/engines/sci/sci.cpp m/engines/sci/sci.cpp
  	if (!msecs) {
  		return;
 diff -urN b/engines/sci/sci.h m/engines/sci/sci.h
---- a/engines/sci/sci.h	2026-07-26 14:21:50.268661593 +0000
-+++ b/engines/sci/sci.h	2026-07-26 14:21:50.286566690 +0000
+--- a/engines/sci/sci.h	2026-07-26 16:38:41.442793908 +0000
++++ b/engines/sci/sci.h	2026-07-26 16:38:41.444435866 +0000
 @@ -26,6 +26,8 @@
  #include "common/macresman.h"
  #include "common/util.h"
