@@ -1,0 +1,71 @@
+WARNING: File::open: node does not exist!
+Creating configuration file: /tmp/pq1sci-gameroom.ini
+Game Added: 
+  Target:   pq1sci
+  GameID:   sci:pq1sci
+  Name:     Police Quest: In Pursuit of the Death Angel (SCI/DOS/English)
+  Language: English
+  Platform: DOS
+Added 1 games
+Using configuration file: /tmp/pq1sci-gameroom.ini
+Debuglevel (from command line): 1
+Using SDL Video Driver "x11"
+creating SurfaceSDL graphics manager
+creating OpenGL graphics manager
+creating SurfaceSDL graphics manager
+Using SDL Audio Driver "dummy"
+Output sample rate: 44100 Hz
+Output buffer size: 1024 samples
+Output channels: 2
+WARNING: You are missing a valid 'translations.dat' file. GUI translation will not be available!
+HardwareInput with ID 'JOY_START' not known
+HardwareInput with ID 'JOY_LEFT_STICK_Y-' not known
+HardwareInput with ID 'JOY_LEFT_STICK_Y+' not known
+HardwareInput with ID 'JOY_LEFT_STICK_X-' not known
+HardwareInput with ID 'JOY_LEFT_STICK_X+' not known
+HardwareInput with ID 'JOY_RIGHT_SHOULDER' not known
+CPU extensions:
+SSE2(enabled) AVX2(enabled) NEON(not supported)
+User picked target 'pq1sci' (engine ID 'sci', game ID 'pq1sci')...
+Running Police Quest: In Pursuit of the Death Angel (SCI/DOS/English)
+resource.000: e0d5ddf34eda903a38f0837e2aa7145b, 6401433 bytes.
+resource.002: e622f5eceba3d817c311b3ca27aff085, 1200000 bytes.
+resource.003: 5dc5fbdebf20d3b149b3b995d7895f30, 1200000 bytes.
+resource.004: cd4ba515889a170a97c0d7f9a1e40b71, 1200000 bytes.
+resource.005: da9dd1908a9cb969121c5ba2f522e3c2, 1200000 bytes.
+resource.006: a29efeae5ab302dae266a444c0f41f7c, 1001433 bytes.
+resource.map: 35efa814fb994b1cbdac9611e401da67, 5013 bytes.
+resource.msg: b108ef0fe3fae37e4f2db5f01616f375, 216140 bytes.
+HardwareInput with ID 'JOY_A' not known
+HardwareInput with ID 'JOY_B' not known
+HardwareInput with ID 'JOY_LEFT_SHOULDER' not known
+HardwareInput with ID 'JOY_Y' not known
+HardwareInput with ID 'JOY_X' not known
+HardwareInput with ID 'JOY_UP' not known
+HardwareInput with ID 'JOY_DOWN' not known
+HardwareInput with ID 'JOY_LEFT' not known
+HardwareInput with ID 'JOY_RIGHT' not known
+CHT: loaded 3566 translation entries
+Setting 640 x 480 -> 640 x 480 -- 1
+WARNING: generateZipSet: Could not find 'gui-icons.dat'!
+WARNING: Could not find theme 'scummremastered' falling back to builtin!
+ALSA lib seq_hw.c:466:(snd_seq_hw_open) open /dev/snd/seq failed: No such file or directory
+ALSA lib seq_hw.c:466:(snd_seq_hw_open) open /dev/snd/seq failed: No such file or directory
+ALSA lib seq_hw.c:466:(snd_seq_hw_open) open /dev/snd/seq failed: No such file or directory
+ALSA lib seq_hw.c:466:(snd_seq_hw_open) open /dev/snd/seq failed: No such file or directory
+ALSA lib seq_hw.c:466:(snd_seq_hw_open) open /dev/snd/seq failed: No such file or directory
+ALSA lib seq_hw.c:466:(snd_seq_hw_open) open /dev/snd/seq failed: No such file or directory
+ALSA lib seq_hw.c:466:(snd_seq_hw_open) open /dev/snd/seq failed: No such file or directory
+ALSA lib seq_hw.c:466:(snd_seq_hw_open) open /dev/snd/seq failed: No such file or directory
+ALSA lib seq_hw.c:466:(snd_seq_hw_open) open /dev/snd/seq failed: No such file or directory
+Debugger started, type 'exit' to return to the game.
+Type 'help' to see a little list of commands and variables.
+Type 'clear' or 'cls' to clear the debugger's output.
+HardwareInput with ID 'JOY_A' not known
+HardwareInput with ID 'JOY_Y' not known
+HardwareInput with ID 'JOY_UP' not known
+HardwareInput with ID 'JOY_DOWN' not known
+HardwareInput with ID 'JOY_LEFT' not known
+HardwareInput with ID 'JOY_RIGHT' not known
+Room number changed to 1 (1 in hex)
+Wrote 2 history entries

@@ -1,0 +1,9 @@
+--- a/engines/sci/sci.cpp
++++ b/engines/sci/sci.cpp
+@@ -960,3 +960,5 @@
+-	if (ConfMan.hasKey("language")) {
+-		if (Common::parseLanguage(ConfMan.get("language")) == Common::ZH_TWN)
++	if (ConfMan.hasKey("language")) {
++		const Common::String chtLanguage = ConfMan.get("language");
++		if (chtLanguage.equalsIgnoreCase("tw") ||
++				Common::parseLanguage(chtLanguage) == Common::ZH_TWN)

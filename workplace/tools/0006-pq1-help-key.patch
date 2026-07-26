@@ -1,0 +1,5 @@
+--- a/engines/sci/sci.cpp
++++ b/engines/sci/sci.cpp
+@@ -1079,1 +1079,1 @@
+-	const char *help = getChtTranslation("PQ2_CHT_HELP");
++	const char *help = getChtTranslation("PQ1_CHT_HELP");

@@ -1,0 +1,18 @@
+services:
+  pq1-tools:
+    build:
+      context: .
+      dockerfile: Dockerfile.tools
+    container_name: pq1-cht-tools
+    working_dir: /workspace
+    volumes:
+      - ..:/workspace
+      - ../..:/source:ro
+      - ../../../police_quest2/workplace/scummvm-src:/upstream-scummvm:ro
+      - ../../../simon-1/scummvm-src:/upstream-agi-scummvm:ro
+      - ../../../police_quest2/workplace/patches:/pq2-patches:ro
+      - ../../../police_quest2/workplace/tools:/pq2-tools:ro
+      - ../../../police_quest2/workplace/translation:/pq2-translation:ro
+      - ../../../larry_suit_leisure_suit/workplace/patches:/agi-patches:ro
+    stdin_open: true
+    tty: true

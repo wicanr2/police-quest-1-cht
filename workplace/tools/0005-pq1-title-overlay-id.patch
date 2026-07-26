@@ -1,0 +1,17 @@
+--- a/engines/sci/graphics/paint16.cpp
++++ b/engines/sci/graphics/paint16.cpp
+@@ -114,1 +114,1 @@
+-	// CHT: overlay a Traditional Chinese subtitle onto the PQ2 title screen (pic 46).
++	// CHT: overlay a Traditional Chinese subtitle onto the PQ1 title screen (pic 106).
+@@ -115,1 +115,1 @@
+-	// The "Police Quest II" logo is vector pic art (not a bitmap we can edit), so we blit
++	// The "Police Quest I" logo is vector pic art (not a bitmap we can edit), so we blit
+@@ -118,1 +118,1 @@
+-	// touching the iconic original logo. Overlay file pq2_title.ovl in the game path:
++	// touching the iconic original logo. Overlay file pq1_title.ovl in the game path:
+@@ -121,1 +121,1 @@
+-	if (pictureId == 46 && g_sci->getLanguage() == Common::ZH_TWN) {
++	if (pictureId == 106 && g_sci->getLanguage() == Common::ZH_TWN) {
+@@ -123,1 +123,1 @@
+-		if (ovl.open("pq2_title.ovl")) {
++		if (ovl.open("pq1_title.ovl")) {

@@ -1,0 +1,7 @@
+--- a/engines/sci/sci.cpp
++++ b/engines/sci/sci.cpp
+@@ -956,1 +956,4 @@
+ Common::Language SciEngine::getLanguage() const {
++	if (getGameId() == GID_PQ1)
++		return Common::ZH_TWN;
++
