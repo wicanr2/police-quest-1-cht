@@ -1,0 +1,79 @@
+#!/bin/sh
+# 組裝單一平台的 patch-only 交付包。
+#
+# 用法：assemble_release.sh <build_dir> <platform>
+#   build_dir  含 bin/ 的目錄（各平台的 CI job 先把 binary 放進 <build_dir>/bin/）
+#   platform   例如 linux-x86_64、windows-x86_64、macos-universal
+#
+# 刻意只收專案自有的 patch、工具、翻譯、字型與 binary。原始 RESOURCE/VOL/DOS 檔
+# 一律不走訪，最後還會再掃一次確認沒有混進去。
+set -eu
+
+build_dir=$1
+platform=$2
+
+repo_root=$(cd "$(dirname "$0")/../.." && pwd)
+workplace="$repo_root/workplace"
+name="pq1-cht-$platform"
+out="$repo_root/dist-all/$name"
+
+rm -rf "$out"
+mkdir -p "$out/patches" "$out/tools" "$out/translation" "$out/game/agi" "$out/game/sci" "$out/bin"
+
+cp -a "$workplace/patches/." "$out/patches/"
+cp -a "$workplace/tools/." "$out/tools/"
+cp -a "$workplace"/translation/*.tsv "$out/translation/"
+cp -a "$workplace"/translation/LOCALIZE_INSTRUCTIONS.md "$out/translation/"
+cp -a "$workplace"/game/agi/*.fnt "$workplace"/game/agi/*.ovl \
+      "$workplace/game/agi/translation.tsv" "$out/game/agi/"
+cp -a "$workplace"/game/sci/*.fnt "$workplace"/game/sci/*.ovl \
+      "$workplace/game/sci/translation.tsv" "$out/game/sci/"
+cp -a "$build_dir"/bin/. "$out/bin/"
+cp -a "$repo_root/README.md" "$out/README.md"
+cp -a "$workplace/CONTEXT.md" "$workplace/WORKLIST.md" "$out/"
+
+cat > "$out/安裝說明.txt" <<EOF
+《警察故事 1：追捕死亡天使》繁體中文化 —— $platform
+
+本包只含中文化資料與打了中文 patch 的 ScummVM 執行檔，
+不含遊戲本身。請自行準備合法取得的原始遊戲資料。
+
+安裝：
+1. 把原版 Floppy DOS（AGI）的遊戲檔放在自己的資料夾，
+   VGA Remake（SCI）的檔案放另一個資料夾，兩者不要混。
+2. 原版走 bin/ 裡的 scummvm-pq1-agi，VGA Remake 走 scummvm-pq1-sci。
+3. 啟動時把中文資料掛進去：
+     AGI：scummvm-pq1-agi --extrapath=<本包>/game/agi --path=<你的遊戲資料夾>
+     SCI：scummvm-pq1-sci --extrapath=<本包>/game/sci --language=tw --path=<你的遊戲資料夾>
+
+注意：
+- AGI 版靠「game/agi 裡有沒有 pq1_big5.fnt」決定要不要開中文，不要加 --language。
+  AGI 在 ScummVM 走 fallback 偵測，target 語言設成非英文會無法啟動。
+- SCI 版則相反，需要 --language=tw。
+- 校驗檔案完整性：對照本包內的 SHA256SUMS。
+EOF
+
+# patch-only 邊界：原始遊戲資源絕對不能混進交付包。
+find "$out" -type f | sort | while read -r f; do
+	case "$f" in
+	*/RESOURCE.*|*/VOL.*|*/LOGDIR|*/PICDIR|*/VIEWDIR|*/SNDDIR|*/OBJECT|*/WORDS.TOK|*/INTERP.*|*/MT32.DRV|*.ROM|*.zip)
+		echo "forbidden file in patch package: $f" >&2
+		exit 1
+		;;
+	esac
+done
+
+manifest="$out/SHA256SUMS"
+find "$out" -type f ! -name SHA256SUMS -print | sort | xargs sha256sum > "$manifest"
+
+cd "$repo_root/dist-all"
+case "$platform" in
+windows-*)
+	zip -qr "$name.zip" "$name"
+	echo "release package: $repo_root/dist-all/$name.zip"
+	;;
+*)
+	tar -czf "$name.tar.gz" "$name"
+	echo "release package: $repo_root/dist-all/$name.tar.gz"
+	;;
+esac

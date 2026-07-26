@@ -1,0 +1,268 @@
+name: build-cht-packages
+
+# Patch-only 交付：這裡建的是「打了繁中 patch 的 ScummVM binary + 中文資料」。
+# 原始遊戲資料由玩家自備，永遠不進 repo 也不進 artifact。
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  # patches/UPSTREAM_COMMIT.txt 記錄的 pinned upstream。改這裡時要同步改那個檔。
+  SCUMMVM_COMMIT: 3d408ec3516f7c29314d8ae8fb7916f31c9cd9aa
+  SDL_VERSION: 2.30.9
+
+jobs:
+  # 中文資料只在 Linux 上烘一次，三平台共用同一份 artifact。各平台自己跑
+  # build_cht.py 會因為字型 rasterize 的環境差異產出不同的點陣字，共用才能保證一致。
+  data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安裝字型與 Pillow
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3-pil fonts-arphic-uming
+
+      # 這裡刻意不重跑 merge_translation_layers.py：合併需要 gitignored 的
+      # extract/agi-object-skeleton.tsv 與 PQ2 的 prefill 來源，CI 上都沒有，
+      # 重跑只會產出比版控少的表。translation/*-translation.tsv 是版控的合併結果，
+      # 也是唯一真相；改了 translation/batch/ 要在本機跑 tools/build_targets.sh
+      # 重新合併後一起 commit。
+      - name: 烘中文資料與字型
+        working-directory: workplace
+        run: |
+          mkdir -p game/agi game/sci
+          python3 tools/build_cht.py translation/agi-translation.tsv game/agi \
+            --size 15 --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
+          python3 tools/build_cht.py translation/sci-translation.tsv game/sci \
+            --size 15 --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
+          python3 tools/bake_hires_font.py game/agi/pq1_big5_hi.fnt \
+            translation/agi-translation.tsv --size 27 --height 28 --width 32 \
+            --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
+          python3 tools/bake_hires_font.py game/sci/pq1_big5_hi.fnt \
+            translation/sci-translation.tsv --size 27 --height 28 --width 32 \
+            --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
+          python3 tools/build_title_overlay.py agi game/agi/pq1_title.ovl \
+            --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
+          python3 tools/build_title_overlay.py sci game/sci/pq1_title.ovl \
+            --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
+
+      - name: 驗證翻譯表與字型
+        working-directory: workplace
+        run: |
+          python3 tools/validate_translation.py translation/agi-translation.tsv
+          python3 tools/validate_translation.py translation/sci-translation.tsv
+          # 字型每字 2 + 15*2 bytes，高度必須與引擎 loadPrefixedRaw 的 15 相同，
+          # 對不上會逐筆錯位、大量缺字。這裡直接斷言檔案結構。
+          python3 - <<'EOF'
+          import struct, sys
+          for path, rec in (('game/agi/pq1_big5.fnt', 32), ('game/sci/pq1_big5.fnt', 32),
+                            ('game/agi/pq1_big5_hi.fnt', 114), ('game/sci/pq1_big5_hi.fnt', 114)):
+              data = open(path, 'rb').read()
+              if (len(data) - 2) % rec:
+                  sys.exit(f'{path}: 長度 {len(data)} 不是 {rec} bytes/字 的整數倍')
+              n, i = 0, 0
+              while i + 2 <= len(data):
+                  if struct.unpack_from('>H', data, i)[0] == 0xFFFF:
+                      break
+                  n += 1
+                  i += rec
+              print(f'{path}: {n} glyphs, {rec} bytes/字')
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cht-data
+          path: workplace/game/
+          retention-days: 14
+
+  linux:
+    runs-on: ubuntu-latest
+    needs: data
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安裝建置相依
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential git \
+            libsdl2-dev libjpeg-turbo8-dev libpng-dev libmpeg2-4-dev \
+            libtheora-dev libvorbis-dev libmad0-dev libfreetype-dev
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cht-data
+          path: workplace/game
+
+      - name: 建置 AGI 與 SCI binary
+        run: |
+          git clone https://github.com/scummvm/scummvm.git src
+          git -C src checkout "$SCUMMVM_COMMIT"
+          mkdir -p out/bin
+          for engine in agi sci; do
+            rm -rf "build-$engine"
+            cp -r src "build-$engine"
+            if [ "$engine" = sci ]; then
+              cp workplace/patches/fontchinese.cpp workplace/patches/fontchinese.h \
+                 "build-$engine/engines/sci/graphics/"
+            fi
+            ( cd "build-$engine" \
+              && patch -p1 < "../workplace/patches/0001-$engine-cht-zh_twn.patch" \
+              && ./configure --disable-all-engines --enable-engine="$engine" \
+                   --disable-detection-full \
+              && make -j"$(nproc)" scummvm )
+            cp "build-$engine/scummvm" "out/bin/scummvm-pq1-$engine"
+          done
+          file out/bin/*
+
+      - name: 組裝 patch 包
+        run: bash workplace/tools/assemble_release.sh out linux-x86_64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pq1-cht-linux-x86_64
+          path: dist-all/*
+          retention-days: 30
+
+  windows:
+    runs-on: ubuntu-latest
+    needs: data
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安裝 mingw-w64 交叉工具鏈
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential git \
+            mingw-w64 mingw-w64-tools wget
+
+      - name: 準備 Windows 版 SDL2
+        run: |
+          wget -q "https://github.com/libsdl-org/SDL/releases/download/release-$SDL_VERSION/SDL2-devel-$SDL_VERSION-mingw.tar.gz"
+          tar xf "SDL2-devel-$SDL_VERSION-mingw.tar.gz"
+          mv "SDL2-$SDL_VERSION/x86_64-w64-mingw32" sdl2-mingw
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cht-data
+          path: workplace/game
+
+      - name: 交叉編譯 AGI 與 SCI
+        run: |
+          git clone https://github.com/scummvm/scummvm.git src
+          git -C src checkout "$SCUMMVM_COMMIT"
+          SDL_PREFIX="$PWD/sdl2-mingw"
+          mkdir -p out/bin
+          for engine in agi sci; do
+            rm -rf "build-$engine"
+            cp -r src "build-$engine"
+            if [ "$engine" = sci ]; then
+              cp workplace/patches/fontchinese.cpp workplace/patches/fontchinese.h \
+                 "build-$engine/engines/sci/graphics/"
+            fi
+            ( cd "build-$engine" \
+              && patch -p1 < "../workplace/patches/0001-$engine-cht-zh_twn.patch" \
+              && ./configure --host=x86_64-w64-mingw32 \
+                   --disable-all-engines --enable-engine="$engine" \
+                   --disable-detection-full \
+                   --with-sdl-prefix="$SDL_PREFIX" \
+              && make -j"$(nproc)" scummvm )
+            cp "build-$engine/scummvm.exe" "out/bin/scummvm-pq1-$engine.exe"
+          done
+          cp "$SDL_PREFIX/bin/SDL2.dll" out/bin/
+          # mingw 的執行期 DLL 依賴，缺了玩家端一開就找不到進入點
+          for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
+            src=$(find /usr/lib/gcc/x86_64-w64-mingw32 /usr/x86_64-w64-mingw32 \
+                  -name "$dll" 2>/dev/null | head -1)
+            [ -n "$src" ] && cp "$src" out/bin/ || echo "警告：找不到 $dll"
+          done
+          file out/bin/*.exe
+
+      - name: 組裝 patch 包
+        run: bash workplace/tools/assemble_release.sh out windows-x86_64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pq1-cht-windows-x86_64
+          path: dist-all/*
+          retention-days: 30
+
+  macos:
+    runs-on: macos-14
+    needs: data
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cht-data
+          path: workplace/game
+
+      # brew 的 sdl2 現在是 sdl2-compat（SDL3 shim），ScummVM 連上去會黑畫面。
+      # 自編 pinned 真 SDL2，兩個弧各一份 prefix。
+      - name: 自編 pinned SDL2（雙弧）
+        run: |
+          curl -sL "https://github.com/libsdl-org/SDL/releases/download/release-$SDL_VERSION/SDL2-$SDL_VERSION.tar.gz" | tar xz
+          for arch in arm64 x86_64; do
+            rm -rf "sdl-build-$arch"
+            cp -r "SDL2-$SDL_VERSION" "sdl-build-$arch"
+            ( cd "sdl-build-$arch" \
+              && CFLAGS="-arch $arch -mmacosx-version-min=11.0" \
+                 LDFLAGS="-arch $arch -mmacosx-version-min=11.0" \
+                 ./configure --prefix="$PWD/../sdl-$arch" \
+                   --host="$arch-apple-darwin" --disable-shared --enable-static \
+              && make -j"$(sysctl -n hw.ncpu)" && make install )
+          done
+
+      # ScummVM 的 configure 是手寫 shell script，不是 autoconf：CXXFLAGS/LDFLAGS
+      # 只能走環境變數，當位置參數傳會 unrecognized option。單次雙弧也會炸掉它的
+      # 版本探測，所以每弧各編一次再 lipo 合併。
+      - name: 每弧建置後 lipo 合併
+        run: |
+          git clone https://github.com/scummvm/scummvm.git src
+          git -C src checkout "$SCUMMVM_COMMIT"
+          mkdir -p out/bin
+          for engine in agi sci; do
+            for arch in arm64 x86_64; do
+              rm -rf "build-$engine-$arch"
+              cp -r src "build-$engine-$arch"
+              if [ "$engine" = sci ]; then
+                cp workplace/patches/fontchinese.cpp workplace/patches/fontchinese.h \
+                   "build-$engine-$arch/engines/sci/graphics/"
+              fi
+              ( cd "build-$engine-$arch" \
+                && patch -p1 < "../workplace/patches/0001-$engine-cht-zh_twn.patch" \
+                && CXXFLAGS="-arch $arch -mmacosx-version-min=11.0" \
+                   LDFLAGS="-arch $arch -mmacosx-version-min=11.0" \
+                   ./configure --disable-all-engines --enable-engine="$engine" \
+                     --disable-detection-full \
+                     --with-sdl-prefix="$PWD/../sdl-$arch" \
+                && make -j"$(sysctl -n hw.ncpu)" scummvm )
+            done
+            lipo -create "build-$engine-arm64/scummvm" "build-$engine-x86_64/scummvm" \
+              -output "out/bin/scummvm-pq1-$engine"
+          done
+
+      # CI 綠燈但 Intel Mac 一開就閃退，通常就是漏了這道雙弧斷言。
+      - name: 斷言 universal 雙弧
+        run: |
+          for f in out/bin/scummvm-pq1-agi out/bin/scummvm-pq1-sci; do
+            lipo -info "$f"
+            lipo -info "$f" | grep -q arm64  || { echo "$f 缺 arm64"; exit 1; }
+            lipo -info "$f" | grep -q x86_64 || { echo "$f 缺 x86_64"; exit 1; }
+            otool -L "$f" | grep -E 'sdl-(arm64|x86_64)|_macbuild' \
+              && { echo "$f 殘留 build 期絕對路徑"; exit 1; }
+          done
+          echo "universal 雙弧驗證通過"
+
+      - name: 組裝 patch 包
+        run: bash workplace/tools/assemble_release.sh out macos-universal
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pq1-cht-macos-universal
+          path: dist-all/*
+          retention-days: 30
