@@ -2,6 +2,10 @@ name: build-cht-packages
 
 # Patch-only 交付：這裡建的是「打了繁中 patch 的 ScummVM binary + 中文資料」。
 # 原始遊戲資料由玩家自備，永遠不進 repo 也不進 artifact。
+#
+# 只有 macOS 走 CI：Apple SDK 不能在 Linux 上交叉編譯，非得借 macos runner。
+# Linux 與 Windows（mingw-w64 交叉編譯）都在本機 Docker 建，見
+# workplace/docker/Dockerfile.mingw 與 workplace/tools/build_local_releases.sh。
 on:
   workflow_dispatch:
   push:
@@ -78,117 +82,6 @@ jobs:
           name: cht-data
           path: workplace/game/
           retention-days: 14
-
-  linux:
-    runs-on: ubuntu-latest
-    needs: data
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: 安裝建置相依
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends build-essential git \
-            libsdl2-dev libjpeg-turbo8-dev libpng-dev libmpeg2-4-dev \
-            libtheora-dev libvorbis-dev libmad0-dev libfreetype-dev
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: cht-data
-          path: workplace/game
-
-      - name: 建置 AGI 與 SCI binary
-        run: |
-          git clone https://github.com/scummvm/scummvm.git src
-          git -C src checkout "$SCUMMVM_COMMIT"
-          mkdir -p out/bin
-          for engine in agi sci; do
-            rm -rf "build-$engine"
-            cp -r src "build-$engine"
-            if [ "$engine" = sci ]; then
-              cp workplace/patches/fontchinese.cpp workplace/patches/fontchinese.h \
-                 "build-$engine/engines/sci/graphics/"
-            fi
-            ( cd "build-$engine" \
-              && patch -p1 < "../workplace/patches/0001-$engine-cht-zh_twn.patch" \
-              && ./configure --disable-all-engines --enable-engine="$engine" \
-                   --disable-detection-full \
-              && make -j"$(nproc)" scummvm )
-            cp "build-$engine/scummvm" "out/bin/scummvm-pq1-$engine"
-          done
-          file out/bin/*
-
-      - name: 組裝 patch 包
-        run: bash workplace/tools/assemble_release.sh out linux-x86_64
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pq1-cht-linux-x86_64
-          path: dist-all/*
-          retention-days: 30
-
-  windows:
-    runs-on: ubuntu-latest
-    needs: data
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: 安裝 mingw-w64 交叉工具鏈
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends build-essential git \
-            mingw-w64 mingw-w64-tools wget
-
-      - name: 準備 Windows 版 SDL2
-        run: |
-          wget -q "https://github.com/libsdl-org/SDL/releases/download/release-$SDL_VERSION/SDL2-devel-$SDL_VERSION-mingw.tar.gz"
-          tar xf "SDL2-devel-$SDL_VERSION-mingw.tar.gz"
-          mv "SDL2-$SDL_VERSION/x86_64-w64-mingw32" sdl2-mingw
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: cht-data
-          path: workplace/game
-
-      - name: 交叉編譯 AGI 與 SCI
-        run: |
-          git clone https://github.com/scummvm/scummvm.git src
-          git -C src checkout "$SCUMMVM_COMMIT"
-          SDL_PREFIX="$PWD/sdl2-mingw"
-          mkdir -p out/bin
-          for engine in agi sci; do
-            rm -rf "build-$engine"
-            cp -r src "build-$engine"
-            if [ "$engine" = sci ]; then
-              cp workplace/patches/fontchinese.cpp workplace/patches/fontchinese.h \
-                 "build-$engine/engines/sci/graphics/"
-            fi
-            ( cd "build-$engine" \
-              && patch -p1 < "../workplace/patches/0001-$engine-cht-zh_twn.patch" \
-              && ./configure --host=x86_64-w64-mingw32 \
-                   --disable-all-engines --enable-engine="$engine" \
-                   --disable-detection-full \
-                   --with-sdl-prefix="$SDL_PREFIX" \
-              && make -j"$(nproc)" scummvm )
-            cp "build-$engine/scummvm.exe" "out/bin/scummvm-pq1-$engine.exe"
-          done
-          cp "$SDL_PREFIX/bin/SDL2.dll" out/bin/
-          # mingw 的執行期 DLL 依賴，缺了玩家端一開就找不到進入點
-          for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
-            src=$(find /usr/lib/gcc/x86_64-w64-mingw32 /usr/x86_64-w64-mingw32 \
-                  -name "$dll" 2>/dev/null | head -1)
-            [ -n "$src" ] && cp "$src" out/bin/ || echo "警告：找不到 $dll"
-          done
-          file out/bin/*.exe
-
-      - name: 組裝 patch 包
-        run: bash workplace/tools/assemble_release.sh out windows-x86_64
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pq1-cht-windows-x86_64
-          path: dist-all/*
-          retention-days: 30
 
   macos:
     runs-on: macos-14

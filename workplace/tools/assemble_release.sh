@@ -12,12 +12,17 @@ set -eu
 build_dir=$1
 platform=$2
 
-repo_root=$(cd "$(dirname "$0")/../.." && pwd)
-workplace="$repo_root/workplace"
+# 預設從腳本位置推導 <repo>/workplace/tools/。容器內 workplace 直接掛成 /workspace、
+# repo 根另外掛成唯讀的 /source，這時用這兩個環境變數指路。
+repo_root=${PQ1_REPO_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}
+workplace=${PQ1_WORKPLACE:-$repo_root/workplace}
 name="pq1-cht-$platform"
-out="$repo_root/dist-all/$name"
+# 容器內 repo 根是唯讀掛載，本機建置時用 PQ1_DIST_DIR 指到可寫的位置。
+dist_dir=${PQ1_DIST_DIR:-$repo_root/dist-all}
+out="$dist_dir/$name"
 
 rm -rf "$out"
+mkdir -p "$dist_dir"
 mkdir -p "$out/patches" "$out/tools" "$out/translation" "$out/game/agi" "$out/game/sci" "$out/bin"
 
 cp -a "$workplace/patches/." "$out/patches/"
@@ -66,14 +71,16 @@ done
 manifest="$out/SHA256SUMS"
 find "$out" -type f ! -name SHA256SUMS -print | sort | xargs sha256sum > "$manifest"
 
-cd "$repo_root/dist-all"
+cd "$dist_dir"
+# 先刪舊檔：zip 對既有壓縮檔是「更新」模式，上一版多打進去的東西不會被移除。
+rm -f "$name.zip" "$name.tar.gz"
 case "$platform" in
 windows-*)
 	zip -qr "$name.zip" "$name"
-	echo "release package: $repo_root/dist-all/$name.zip"
+	echo "release package: $dist_dir/$name.zip"
 	;;
 *)
 	tar -czf "$name.tar.gz" "$name"
-	echo "release package: $repo_root/dist-all/$name.tar.gz"
+	echo "release package: $dist_dir/$name.tar.gz"
 	;;
 esac

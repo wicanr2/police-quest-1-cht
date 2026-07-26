@@ -16,3 +16,18 @@ services:
       - ../../../larry_suit_leisure_suit/workplace/patches:/agi-patches:ro
     stdin_open: true
     tty: true
+
+  # Windows 版交叉編譯環境。只掛 workplace 與兩個 upstream 樹，不需要 PQ2 那組來源。
+  pq1-mingw:
+    build:
+      context: .
+      dockerfile: Dockerfile.mingw
+    container_name: pq1-cht-mingw
+    working_dir: /workspace
+    volumes:
+      - ..:/workspace
+      - ../..:/source:ro
+      - ../../../police_quest2/workplace/scummvm-src:/upstream-scummvm:ro
+      - ../../../simon-1/scummvm-src:/upstream-agi-scummvm:ro
+    stdin_open: true
+    tty: true

@@ -9,6 +9,10 @@ workplace/scummvm-src/
 workplace/dist-all/
 workplace/.build-sci-src/
 workplace/.build-agi-src/
+workplace/.build-win/
+workplace/.build-linux/
+workplace/.upstream-src/
+/dist-all/
 *.ROM
 *.core
 __pycache__/

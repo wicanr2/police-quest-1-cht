@@ -1,0 +1,20 @@
+# Windows 版在本機用 mingw-w64 交叉編譯，不佔 CI。
+# Debian 的 mingw-w64 沒有 SDL2，改用 libsdl-org 官方的 mingw devel tarball。
+FROM debian:bookworm-slim
+
+ARG SDL_VERSION=2.30.9
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates build-essential git wget xz-utils zip unzip \
+    mingw-w64 mingw-w64-tools \
+    python3 python3-pil fonts-arphic-uming && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN wget -q "https://github.com/libsdl-org/SDL/releases/download/release-${SDL_VERSION}/SDL2-devel-${SDL_VERSION}-mingw.tar.gz" \
+    -O /tmp/sdl2.tar.gz && \
+    tar -C /tmp -xf /tmp/sdl2.tar.gz && \
+    mv "/tmp/SDL2-${SDL_VERSION}/x86_64-w64-mingw32" /opt/sdl2-mingw && \
+    rm -rf /tmp/sdl2.tar.gz "/tmp/SDL2-${SDL_VERSION}"
+
+ENV SDL_MINGW_PREFIX=/opt/sdl2-mingw
+WORKDIR /workspace
