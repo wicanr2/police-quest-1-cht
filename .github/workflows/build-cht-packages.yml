@@ -99,41 +99,47 @@ jobs:
       - name: 自編 pinned SDL2（雙弧）
         run: |
           curl -sL "https://github.com/libsdl-org/SDL/releases/download/release-$SDL_VERSION/SDL2-$SDL_VERSION.tar.gz" | tar xz
+          cat > build-sdl.sh <<'SH'
+          set -eu
+          arch=$1
+          prefix=$2
+          cd "sdl-build-$arch"
+          CFLAGS="-arch $arch -mmacosx-version-min=11.0" \
+          LDFLAGS="-arch $arch -mmacosx-version-min=11.0" \
+            ./configure --prefix="$prefix" --disable-shared --enable-static
+          make -j"$(sysctl -n hw.ncpu)"
+          make install
+          SH
           for arch in arm64 x86_64; do
             rm -rf "sdl-build-$arch"
             cp -r "SDL2-$SDL_VERSION" "sdl-build-$arch"
-            ( cd "sdl-build-$arch" \
-              && CFLAGS="-arch $arch -mmacosx-version-min=11.0" \
-                 LDFLAGS="-arch $arch -mmacosx-version-min=11.0" \
-                 ./configure --prefix="$PWD/../sdl-$arch" \
-                   --host="$arch-apple-darwin" --disable-shared --enable-static \
-              && make -j"$(sysctl -n hw.ncpu)" && make install )
+            # 與 ScummVM 同理走 Rosetta，讓 configure 的 run-test 在原生 x86_64 下跑，
+            # 比 autotools --host= 交叉模式（探測結果全走預設值）可靠。
+            if [ "$arch" = x86_64 ]; then
+              arch -x86_64 /bin/sh build-sdl.sh "$arch" "$PWD/sdl-$arch"
+            else
+              /bin/sh build-sdl.sh "$arch" "$PWD/sdl-$arch"
+            fi
           done
 
-      # ScummVM 的 configure 是手寫 shell script，不是 autoconf：CXXFLAGS/LDFLAGS
-      # 只能走環境變數，當位置參數傳會 unrecognized option。單次雙弧也會炸掉它的
-      # 版本探測，所以每弧各編一次再 lipo 合併。
+      # 每弧各編一次再 lipo 合併：ScummVM 的 configure 是手寫 shell script 不是
+      # autoconf，單次雙弧會炸掉它的版本探測。x86_64 那一弧必須整個跑在 Rosetta
+      # 下（arch -x86_64），因為 configure 用 uname 判 host CPU 來決定要不要開 ARM
+      # NEON，只給 -arch x86_64 它仍會判成 aarch64 而編不過 blit-neon.cpp。
       - name: 每弧建置後 lipo 合併
         run: |
           git clone https://github.com/scummvm/scummvm.git src
           git -C src checkout "$SCUMMVM_COMMIT"
           mkdir -p out/bin
+          builder="$PWD/workplace/tools/build_macos_arch.sh"
           for engine in agi sci; do
             for arch in arm64 x86_64; do
-              rm -rf "build-$engine-$arch"
-              cp -r src "build-$engine-$arch"
-              if [ "$engine" = sci ]; then
-                cp workplace/patches/fontchinese.cpp workplace/patches/fontchinese.h \
-                   "build-$engine-$arch/engines/sci/graphics/"
+              tree="$PWD/build-$engine-$arch"
+              if [ "$arch" = x86_64 ]; then
+                arch -x86_64 /bin/sh "$builder" "$engine" "$arch" "$PWD/src" "$tree" "$PWD/sdl-$arch"
+              else
+                /bin/sh "$builder" "$engine" "$arch" "$PWD/src" "$tree" "$PWD/sdl-$arch"
               fi
-              ( cd "build-$engine-$arch" \
-                && patch -p1 < "../workplace/patches/0001-$engine-cht-zh_twn.patch" \
-                && CXXFLAGS="-arch $arch -mmacosx-version-min=11.0" \
-                   LDFLAGS="-arch $arch -mmacosx-version-min=11.0" \
-                   ./configure --disable-all-engines --enable-engine="$engine" \
-                     --disable-detection-full \
-                     --with-sdl-prefix="$PWD/../sdl-$arch" \
-                && make -j"$(sysctl -n hw.ncpu)" scummvm )
             done
             lipo -create "build-$engine-arm64/scummvm" "build-$engine-x86_64/scummvm" \
               -output "out/bin/scummvm-pq1-$engine"
