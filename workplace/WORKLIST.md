@@ -10,7 +10,7 @@
 | M4 正常流程驗收 | ⏳ | AGI 已驗；SCI 部分已驗，仍有待驗項目（見下） |
 | M5 Linux 交付 | ✅ | `dist-all/pq1-cht-linux-x86_64.tar.gz`（5.9 MB），解包實跑通過 |
 | M5 Windows 交付 | ✅ | `dist-all/pq1-cht-windows-x86_64.zip`（20 MB），Wine 實跑通過 |
-| M5 macOS 交付 | ⏳ | CI 走 macos-14 universal，NEON 已修，正在解外部 codec 架構問題 |
+| M5 macOS 交付 | ✅ | CI run 30206666058 artifact（17 MB），下載後獨立驗證 fat binary 雙弧 |
 
 ## 翻譯覆蓋率說明
 
@@ -57,6 +57,19 @@
 - AGI：`original/agi`、`translation/agi-*`、`.build-agi-src`
 - SCI VGA：`original/vga`、`translation/sci-*`、`.build-sci-src`
 - 原始 `RESOURCE.*`、`VOL.*`、DOS executable、防拷答案與 ROM 不進 Git。
+
+## 交付包驗證紀錄
+
+三個包都是「解開後在自己的環境驗」，不是只看 build 綠燈：
+
+| 平台 | 驗證內容 |
+|---|---|
+| Linux | 解包實跑兩個 binary，log 出現 `AGI-CHT: 載入 2816 則翻譯`、`CHT: loaded 3566 translation entries`，截圖中文無缺字 |
+| Windows | `objdump` 確認 import 只有系統 DLL 加 SDL2.dll、已 strip；Wine 實跑 AGI 版，翻譯載入數相同 |
+| macOS | 下載 artifact 後自行解析 Mach-O fat header：兩個 binary 各有 x86_64 與 arm64 兩個 slice |
+
+三個包都通過 `SHA256SUMS` 校驗（0 失敗）與 patch-only 邊界掃描（無 `RESOURCE.*`／
+`VOL.*`／DOS 執行檔／ROM／zip）。
 
 ## 建置流程
 
