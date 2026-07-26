@@ -33,18 +33,14 @@ namespace Sci {
 
 // Big5 font data file shipped alongside the game (part of the CHT patch).
 static const char *kChineseFontFile = "pq1_big5.fnt";
-// Advance width of a Big5 char in logical 320x200 space. 10 gives a dense-but-readable
-// look: the 20px hi-res glyph box exactly fills the 20px display advance, so characters
-// sit close together while staying large enough to read comfortably.
-static const int kBig5Width = 12;
+// Big5Font stores 16xH glyphs. Keep the logical advance at 16 so a 32px hi-res
+// glyph occupies exactly one 2x-upscaled cell and cannot overlap its neighbour.
+static const int kBig5Width = 16;
 
-// Hi-res Big5 font (own format, bake_hires_font.py): kHiW-px-wide, kHiH-row glyphs drawn
-// straight onto the 640x400 display buffer for sharp strokes under ZH_TWN upscaling.
-// kHiW <= kBig5Width*2 (=20) so glyphs never bleed into the next cell. Row stride is
-// ceil(kHiW/8) bytes, so kHiW need not be a multiple of 8.
+// Hi-res Big5 font is generated as 32x28; four bytes per row and one 32px display cell.
 static const char *kChineseHiResFontFile = "pq1_big5_hi.fnt";
-static const int kHiW = 24;
-static const int kHiH = 24;
+static const int kHiW = 32;
+static const int kHiH = 28;
 
 GfxFontChinese::GfxFontChinese(ResourceManager *resMan, GfxScreen *screen, GuiResourceId resourceId)
 	: _screen(screen), _resourceId(resourceId), _big5(nullptr), _big5Height(15) {

@@ -38,11 +38,19 @@ patch -p1 < "$(dirname "$0")/../patches/0001-$engine-cht-zh_twn.patch"
 
 # ScummVM 的 configure 是手寫 shell script 不是 autoconf：CXXFLAGS／LDFLAGS 只能走
 # 環境變數，當位置參數傳會直接 unrecognized option。
+# 停掉所有外部 codec：Homebrew 在 Apple Silicon runner 上只裝 arm64 版，configure
+# 即使跑在 Rosetta 下仍會偵測到 /opt/homebrew 的 libjpeg／libpng 並連進去，x86_64
+# 弧就會 "found architecture 'arm64', required architecture 'x86_64'" 連結失敗。
+# AGI 與 SCI 只需要 SDL2，音樂走內建的 AdLib／MT-32 合成器，這些庫本來就用不到。
 CXXFLAGS="-arch $arch -mmacosx-version-min=$min_version" \
 LDFLAGS="-arch $arch -mmacosx-version-min=$min_version" \
 	./configure --disable-all-engines --enable-engine="$engine" \
 		--disable-detection-full \
-		--with-sdl-prefix="$sdl_prefix"
+		--with-sdl-prefix="$sdl_prefix" \
+		--disable-jpeg --disable-png --disable-gif \
+		--disable-flac --disable-mad --disable-vorbis --disable-tremor \
+		--disable-theoradec --disable-mpeg2 --disable-a52 --disable-faad \
+		--disable-fluidsynth --disable-freetype2 --disable-libcurl --disable-sdlnet
 
 # 確認 configure 對這一弧的判定真的對了，別等 20 個 uint32x4_t 錯誤才發現。
 if [ "$arch" = x86_64 ] && grep -q '^ENABLE_EXT_NEON' config.mk 2>/dev/null; then

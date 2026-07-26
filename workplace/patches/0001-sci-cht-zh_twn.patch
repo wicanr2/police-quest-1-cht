@@ -1,5 +1,6 @@
---- a/engines/sci/engine/kstring.cpp
-+++ b/engines/sci/engine/kstring.cpp
+diff -urN b/engines/sci/engine/kstring.cpp m/engines/sci/engine/kstring.cpp
+--- a/engines/sci/engine/kstring.cpp	2026-07-26 14:21:49.697762937 +0000
++++ b/engines/sci/engine/kstring.cpp	2026-07-26 14:21:49.702847369 +0000
 @@ -207,6 +207,58 @@
  }
  
@@ -117,8 +118,29 @@
  				int slen = tempsource.size();
  				int extralen = strLength - slen;
  				assert((target - targetbuf) + extralen <= maxsize);
---- a/engines/sci/graphics/cache.cpp
-+++ b/engines/sci/graphics/cache.cpp
+diff -urN b/engines/sci/event.cpp m/engines/sci/event.cpp
+--- a/engines/sci/event.cpp	2026-07-26 14:21:50.154751510 +0000
++++ b/engines/sci/event.cpp	2026-07-26 14:21:50.162641892 +0000
+@@ -422,6 +422,16 @@
+ 		input.type = kSciEventKeyDown;
+ 	}
+ 
++	// CHT: F1 opens a Traditional Chinese "how to play" help box for new players.
++	// PQ2 is a typing adventure with no built-in command tutorial and otherwise
++	// ignores F1. The _inChtHelp guard lets a second F1 (while the box is up) fall
++	// through as a normal key so it dismisses the box instead of reopening it.
++	if (input.type == kSciEventKeyDown && input.character == kSciKeyF1 &&
++			g_sci->getLanguage() == Common::ZH_TWN && !g_sci->_inChtHelp) {
++		g_sci->showChtHelp();
++		return noEvent;
++	}
++
+ 	return input;
+ }
+ 
+diff -urN b/engines/sci/graphics/cache.cpp m/engines/sci/graphics/cache.cpp
+--- a/engines/sci/graphics/cache.cpp	2026-07-26 14:21:49.727948539 +0000
++++ b/engines/sci/graphics/cache.cpp	2026-07-26 14:21:49.737476226 +0000
 @@ -30,6 +30,7 @@
  #include "sci/graphics/scifont.h"
  #include "sci/graphics/fontsjis.h"
@@ -138,8 +160,40 @@
  		else
  			_cachedFonts[fontId] = new GfxFontFromResource(_resMan, _screen, fontId);
  	}
---- a/engines/sci/graphics/paint16.cpp
-+++ b/engines/sci/graphics/paint16.cpp
+diff -urN b/engines/sci/graphics/menu.cpp m/engines/sci/graphics/menu.cpp
+--- a/engines/sci/graphics/menu.cpp	2026-07-26 14:21:49.775837908 +0000
++++ b/engines/sci/graphics/menu.cpp	2026-07-26 14:21:49.873640824 +0000
+@@ -363,10 +363,12 @@
+ 	_paint16->fillRect(_ports->_menuBarRect, 1, _screen->getColorWhite());
+ 	_paint16->fillRect(_ports->_menuLine, 1, 0);
+ 	_ports->penColor(0);
++	// CHT: match kernelDrawStatus's 2px top margin for the taller ZH_TWN menu bar.
++	const int16 chtBarTop = (g_sci->getLanguage() == Common::ZH_TWN) ? 1 : 1;
+ 	if (!g_sci->isLanguageRTL())
+-		_ports->moveTo(8, 1);
++		_ports->moveTo(8, chtBarTop);
+ 	else
+-		_ports->moveTo(_screen->getWidth() - 8, 1);
++		_ports->moveTo(_screen->getWidth() - 8, chtBarTop);
+ 
+ 	listIterator = _list.begin();
+ 	while (listIterator != listEnd) {
+@@ -1025,8 +1027,11 @@
+ 
+ 	_paint16->fillRect(_ports->_menuBarRect, 1, colorBack);
+ 	_ports->penColor(colorPen);
++	// CHT: 14px Big5 in the taller ZH_TWN status bar needs a 2px top margin so the
++	// glyph tops don't butt against the bar edge (looked clipped at 1px).
++	const int16 chtTop = (g_sci->getLanguage() == Common::ZH_TWN) ? 1 : 1;
+ 	if (!g_sci->isLanguageRTL()) {
+-		_ports->moveTo(0, 1);
++		_ports->moveTo(0, chtTop);
+ 	} else {
+ 		int16 textWidth;
+ 		int16 textHeight;
+diff -urN b/engines/sci/graphics/paint16.cpp m/engines/sci/graphics/paint16.cpp
+--- a/engines/sci/graphics/paint16.cpp	2026-07-26 14:21:49.755560576 +0000
++++ b/engines/sci/graphics/paint16.cpp	2026-07-26 14:21:49.763001226 +0000
 @@ -19,6 +19,8 @@
   *
   */
@@ -163,16 +217,16 @@
  	// Reset custom per-picture palette mod
  	_screen->setCurPaletteMapValue(0);
 +
-+	// CHT: overlay a Traditional Chinese subtitle onto the PQ2 title screen (pic 46).
-+	// The "Police Quest II" logo is vector pic art (not a bitmap we can edit), so we blit
++	// CHT: overlay a Traditional Chinese subtitle onto the PQ1 title screen (pic 106).
++	// The "Police Quest I" logo is vector pic art (not a bitmap we can edit), so we blit
 +	// an indexed EGA overlay bitmap straight onto the hi-res 640x400 display buffer -- same
 +	// mechanism GfxFontChinese uses for hi-res glyphs. This adds a Chinese title without
-+	// touching the iconic original logo. Overlay file pq2_title.ovl in the game path:
++	// touching the iconic original logo. Overlay file pq1_title.ovl in the game path:
 +	//   LE u16 width, height, x, y (display 640x400 coords), then width*height bytes of
 +	//   EGA palette indices (0-15); 0xFF = transparent (skip).
-+	if (pictureId == 46 && g_sci->getLanguage() == Common::ZH_TWN) {
++	if (pictureId == 106 && g_sci->getLanguage() == Common::ZH_TWN) {
 +		Common::File ovl;
-+		if (ovl.open("pq2_title.ovl")) {
++		if (ovl.open("pq1_title.ovl")) {
 +			uint16 ow = ovl.readUint16LE();
 +			uint16 oh = ovl.readUint16LE();
 +			uint16 ox = ovl.readUint16LE();
@@ -214,38 +268,9 @@
  }
  
  // This one is the only one that updates screen!
---- a/engines/sci/graphics/menu.cpp
-+++ b/engines/sci/graphics/menu.cpp
-@@ -363,10 +363,12 @@
- 	_paint16->fillRect(_ports->_menuBarRect, 1, _screen->getColorWhite());
- 	_paint16->fillRect(_ports->_menuLine, 1, 0);
- 	_ports->penColor(0);
-+	// CHT: match kernelDrawStatus's 2px top margin for the taller ZH_TWN menu bar.
-+	const int16 chtBarTop = (g_sci->getLanguage() == Common::ZH_TWN) ? 1 : 1;
- 	if (!g_sci->isLanguageRTL())
--		_ports->moveTo(8, 1);
-+		_ports->moveTo(8, chtBarTop);
- 	else
--		_ports->moveTo(_screen->getWidth() - 8, 1);
-+		_ports->moveTo(_screen->getWidth() - 8, chtBarTop);
- 
- 	listIterator = _list.begin();
- 	while (listIterator != listEnd) {
-@@ -1025,8 +1027,11 @@
- 
- 	_paint16->fillRect(_ports->_menuBarRect, 1, colorBack);
- 	_ports->penColor(colorPen);
-+	// CHT: 14px Big5 in the taller ZH_TWN status bar needs a 2px top margin so the
-+	// glyph tops don't butt against the bar edge (looked clipped at 1px).
-+	const int16 chtTop = (g_sci->getLanguage() == Common::ZH_TWN) ? 1 : 1;
- 	if (!g_sci->isLanguageRTL()) {
--		_ports->moveTo(0, 1);
-+		_ports->moveTo(0, chtTop);
- 	} else {
- 		int16 textWidth;
- 		int16 textHeight;
---- a/engines/sci/graphics/ports.cpp
-+++ b/engines/sci/graphics/ports.cpp
+diff -urN b/engines/sci/graphics/ports.cpp m/engines/sci/graphics/ports.cpp
+--- a/engines/sci/graphics/ports.cpp	2026-07-26 14:21:49.898562223 +0000
++++ b/engines/sci/graphics/ports.cpp	2026-07-26 14:21:49.908562338 +0000
 @@ -62,9 +62,13 @@
  	setPort(_menuPort);
  	_text16->SetFont(0);
@@ -263,8 +288,9 @@
  
  	_wmgrPort = new Port(1);
  	_windowsById.resize(2);
---- a/engines/sci/graphics/screen.cpp
-+++ b/engines/sci/graphics/screen.cpp
+diff -urN b/engines/sci/graphics/screen.cpp m/engines/sci/graphics/screen.cpp
+--- a/engines/sci/graphics/screen.cpp	2026-07-26 14:21:49.931509540 +0000
++++ b/engines/sci/graphics/screen.cpp	2026-07-26 14:21:49.939562695 +0000
 @@ -84,6 +84,14 @@
  		}
  	}
@@ -280,8 +306,9 @@
  	// if not yet set, set those to script-width/height
  	if (!_width)
  		_width = _scriptWidth;
---- a/engines/sci/graphics/screen.h
-+++ b/engines/sci/graphics/screen.h
+diff -urN b/engines/sci/graphics/screen.h m/engines/sci/graphics/screen.h
+--- a/engines/sci/graphics/screen.h	2026-07-26 14:21:49.959562925 +0000
++++ b/engines/sci/graphics/screen.h	2026-07-26 14:21:49.966832565 +0000
 @@ -78,6 +78,7 @@
  	uint16 getScriptHeight() { return _scriptHeight; }
  	uint16 getDisplayWidth() { return _displayWidth; }
@@ -290,8 +317,9 @@
  	byte getColorWhite() { return _colorWhite; }
  	byte getColorDefaultVectorData() { return _colorDefaultVectorData; }
  
---- a/engines/sci/graphics/text16.cpp
-+++ b/engines/sci/graphics/text16.cpp
+diff -urN b/engines/sci/graphics/text16.cpp m/engines/sci/graphics/text16.cpp
+--- a/engines/sci/graphics/text16.cpp	2026-07-26 14:21:49.986580819 +0000
++++ b/engines/sci/graphics/text16.cpp	2026-07-26 14:21:49.992563305 +0000
 @@ -303,7 +303,21 @@
  		// Break without spaces found, we split the very first word - may also be Kanji/Japanese
  
@@ -323,7 +351,7 @@
  		} else {
  			// Add a character to the count for games whose interpreter would count the
  			//  character that exceeded the width if a space hadn't been reached yet.
-@@ -442,6 +457,14 @@
+@@ -442,10 +457,29 @@
  #endif
  
  void GfxText16::DrawString(const Common::String &str, GuiResourceId orgFontId, int16 orgPenColor) {
@@ -338,7 +366,22 @@
  	Draw(str.c_str(), 0, str.size(), orgFontId, orgPenColor);
  }
  
-@@ -569,6 +592,15 @@
+ int16 GfxText16::Size(Common::Rect &rect, const char *text, uint16 languageSplitter, GuiResourceId fontId, int16 maxWidth) {
++	// Traditional Chinese fan translation: measure the string that will actually be
++	// drawn. Box() swaps in the Big5 translation before rendering, so if Size() keeps
++	// measuring the English original the caller opens a window sized for English and
++	// the wider Chinese text gets clipped at the edge ("沒錯，是一" instead of
++	// "沒錯，是一面實心牆。"). Same lookup as Box() so both agree.
++	if (g_sci->getLanguage() == Common::ZH_TWN) {
++		const char *tr = g_sci->getChtTranslation(text);
++		if (tr)
++			text = tr;
++	}
++
+ 	GuiResourceId previousFontId = GetFontId();
+ 	int16 previousPenColor = _ports->_curPort->penClr;
+ 	int16 maxTextWidth = 0, textWidth;
+@@ -569,6 +603,15 @@
  	int16 textWidth, maxTextWidth, textHeight;
  	int16 offset = 0;
  	int16 hline = 0;
@@ -354,7 +397,7 @@
  	GuiResourceId previousFontId = GetFontId();
  	int16 previousPenColor = _ports->_curPort->penClr;
  	bool doubleByteMode = false;
-@@ -683,10 +715,18 @@
+@@ -683,10 +726,18 @@
  	_ports->penColor(previousPenColor);
  }
  
@@ -374,7 +417,7 @@
  	Common::String text;
  	if (!g_sci->isLanguageRTL())
  		text = textOrig;
-@@ -700,11 +740,19 @@
+@@ -700,11 +751,19 @@
  
  // we need to have a separate status drawing code
  //  In KQ4 the IV char is actually 0xA, which would otherwise get considered as linebreak and not printed
@@ -395,7 +438,7 @@
  	Common::String str;
  	if (!g_sci->isLanguageRTL())
  		str = strOrig;
-@@ -719,6 +767,13 @@
+@@ -719,6 +778,13 @@
  	rect.bottom = rect.top + _ports->_curPort->fontHeight;
  	while (textLen--) {
  		uint16 curChar = *text++;
@@ -409,8 +452,9 @@
  		switch (curChar) {
  		case 0:
  			break;
---- a/engines/sci/graphics/view.cpp
-+++ b/engines/sci/graphics/view.cpp
+diff -urN b/engines/sci/graphics/view.cpp m/engines/sci/graphics/view.cpp
+--- a/engines/sci/graphics/view.cpp	2026-07-26 14:21:50.022039197 +0000
++++ b/engines/sci/graphics/view.cpp	2026-07-26 14:21:50.026592891 +0000
 @@ -19,6 +19,8 @@
   *
   */
@@ -479,8 +523,9 @@
  	const byte drawMask = priority > 15 ? GFX_SCREEN_MASK_VISUAL : GFX_SCREEN_MASK_VISUAL|GFX_SCREEN_MASK_PRIORITY;
  
  	if (_embeddedPal)
---- a/engines/sci/graphics/view.h
-+++ b/engines/sci/graphics/view.h
+diff -urN b/engines/sci/graphics/view.h m/engines/sci/graphics/view.h
+--- a/engines/sci/graphics/view.h	2026-07-26 14:21:50.051563984 +0000
++++ b/engines/sci/graphics/view.h	2026-07-26 14:21:50.083820058 +0000
 @@ -75,6 +75,9 @@
  	uint16 getCelCount(int16 loopNo) const;
  	Palette *getPalette();
@@ -491,8 +536,9 @@
  	bool isScaleable();
  
  	void adjustToUpscaledCoordinates(int16 &y, int16 &x);
---- a/engines/sci/module.mk
-+++ b/engines/sci/module.mk
+diff -urN b/engines/sci/module.mk m/engines/sci/module.mk
+--- a/engines/sci/module.mk	2026-07-26 14:21:50.109564652 +0000
++++ b/engines/sci/module.mk	2026-07-26 14:21:50.130564894 +0000
 @@ -48,6 +48,7 @@
  	graphics/controls16.o \
  	graphics/coordadjuster.o \
@@ -501,27 +547,9 @@
  	graphics/fontkorean.o \
  	graphics/fontsjis.o \
  	graphics/macfont.o \
---- a/engines/sci/event.cpp
-+++ b/engines/sci/event.cpp
-@@ -422,6 +422,16 @@
- 		input.type = kSciEventKeyDown;
- 	}
- 
-+	// CHT: F1 opens a Traditional Chinese "how to play" help box for new players.
-+	// PQ2 is a typing adventure with no built-in command tutorial and otherwise
-+	// ignores F1. The _inChtHelp guard lets a second F1 (while the box is up) fall
-+	// through as a normal key so it dismisses the box instead of reopening it.
-+	if (input.type == kSciEventKeyDown && input.character == kSciKeyF1 &&
-+			g_sci->getLanguage() == Common::ZH_TWN && !g_sci->_inChtHelp) {
-+		g_sci->showChtHelp();
-+		return noEvent;
-+	}
-+
- 	return input;
- }
- 
---- a/engines/sci/sci.cpp
-+++ b/engines/sci/sci.cpp
+diff -urN b/engines/sci/sci.cpp m/engines/sci/sci.cpp
+--- a/engines/sci/sci.cpp	2026-07-26 14:21:50.208723127 +0000
++++ b/engines/sci/sci.cpp	2026-07-26 14:21:50.211565827 +0000
 @@ -19,7 +19,11 @@
   *
   */
@@ -597,7 +625,7 @@
  #ifdef ENABLE_SCI32
  	if (getSciVersion() >= SCI_VERSION_2) {
  		// SCI32 graphic objects creation
-@@ -831,7 +877,90 @@
+@@ -831,7 +877,93 @@
  	return _gameDescription->gameId;
  }
  
@@ -678,6 +706,9 @@
 +}
 +
  Common::Language SciEngine::getLanguage() const {
++	if (getGameId() == GID_PQ1)
++		return Common::ZH_TWN;
++
 +	// Traditional Chinese fan translation: allow forcing ZH_TWN via the target's
 +	// "language" config key (e.g. --language=zh_TW) so the CHT patch can be applied
 +	// on top of the original English game without a dedicated detection entry.
@@ -688,7 +719,7 @@
  	return _gameDescription->language;
  }
  
-@@ -943,6 +1072,77 @@
+@@ -943,6 +1075,77 @@
  			"for Quest for Glory 2. Example: 'qfg2-thief.sav'."));
  }
  
@@ -696,7 +727,7 @@
 +	// Guard against re-entry (F1 pressed again while the box is up).
 +	if (_inChtHelp || !_gfxPaint16 || !_gfxText16 || !_gfxPorts || !_gfxScreen)
 +		return;
-+	const char *help = getChtTranslation("PQ2_CHT_HELP");
++	const char *help = getChtTranslation("PQ1_CHT_HELP");
 +	if (!help)
 +		return;
 +	_inChtHelp = true;
@@ -766,8 +797,9 @@
  void SciEngine::sleep(uint32 msecs) {
  	if (!msecs) {
  		return;
---- a/engines/sci/sci.h
-+++ b/engines/sci/sci.h
+diff -urN b/engines/sci/sci.h m/engines/sci/sci.h
+--- a/engines/sci/sci.h	2026-07-26 14:21:50.268661593 +0000
++++ b/engines/sci/sci.h	2026-07-26 14:21:50.286566690 +0000
 @@ -26,6 +26,8 @@
  #include "common/macresman.h"
  #include "common/util.h"

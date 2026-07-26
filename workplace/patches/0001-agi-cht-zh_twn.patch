@@ -1,8 +1,7 @@
-diff --git a/engines/agi/agi.cpp b/engines/agi/agi.cpp
-index 95d4ad4082..d6383630a6 100644
---- a/engines/agi/agi.cpp
-+++ b/engines/agi/agi.cpp
-@@ -521,6 +521,11 @@ void AgiEngine::initialize() {
+diff -urN b/engines/agi/agi.cpp m/engines/agi/agi.cpp
+--- a/engines/agi/agi.cpp	2026-07-26 14:21:49.092814370 +0000
++++ b/engines/agi/agi.cpp	2026-07-26 14:21:49.136812348 +0000
+@@ -521,6 +521,11 @@
  	_words = new Words(this);
  	_font = new GfxFont(this);
  	_gfx = new GfxMgr(this, _font);
@@ -14,11 +13,10 @@ index 95d4ad4082..d6383630a6 100644
  	_sound = new SoundMgr(this, _mixer);
  	_picture = new PictureMgr(this, _gfx);
  	_sprites = new SpritesMgr(this, _gfx);
-diff --git a/engines/agi/agi.h b/engines/agi/agi.h
-index b3ced461ee..9e01827992 100644
---- a/engines/agi/agi.h
-+++ b/engines/agi/agi.h
-@@ -747,6 +747,14 @@ public:
+diff -urN b/engines/agi/agi.h m/engines/agi/agi.h
+--- a/engines/agi/agi.h	2026-07-26 14:21:49.168846353 +0000
++++ b/engines/agi/agi.h	2026-07-26 14:21:49.229830286 +0000
+@@ -747,6 +747,14 @@
  	SpritesMgr *_sprites;
  	TextMgr *_text;
  	InventoryMgr *_inventory;
@@ -33,10 +31,9 @@ index b3ced461ee..9e01827992 100644
  	PictureMgr *_picture;
  	AgiLoader *_loader;
  	GfxMenu *_menu;
-diff --git a/engines/agi/cycle.cpp b/engines/agi/cycle.cpp
-index 81421b47a4..930db287b4 100644
---- a/engines/agi/cycle.cpp
-+++ b/engines/agi/cycle.cpp
+diff -urN b/engines/agi/cycle.cpp m/engines/agi/cycle.cpp
+--- a/engines/agi/cycle.cpp	2026-07-26 14:21:49.266754729 +0000
++++ b/engines/agi/cycle.cpp	2026-07-26 14:21:49.296555292 +0000
 @@ -20,6 +20,7 @@
   */
  
@@ -45,7 +42,7 @@ index 81421b47a4..930db287b4 100644
  
  #include "agi/agi.h"
  #include "agi/sprite.h"
-@@ -53,6 +54,11 @@ void AgiEngine::newRoom(int16 newRoomNr) {
+@@ -53,6 +54,11 @@
  		newRoomNr = ConfMan.getBool("copy_protection") ? 125 : 73;
  	}
  
@@ -57,7 +54,7 @@ index 81421b47a4..930db287b4 100644
  	ScreenObjEntry *screenObjEgo = &_game.screenObjTable[SCREENOBJECTS_EGO_ENTRY];
  
  	// Loading trigger
-@@ -157,6 +163,18 @@ void AgiEngine::resetControllers() {
+@@ -157,6 +163,18 @@
  void AgiEngine::interpretCycle() {
  	ScreenObjEntry *screenObjEgo = &_game.screenObjTable[SCREENOBJECTS_EGO_ENTRY];
  
@@ -76,7 +73,7 @@ index 81421b47a4..930db287b4 100644
  	if (!_game.playerControl)
  		setVar(VM_VAR_EGO_DIRECTION, screenObjEgo->direction);
  	else
-@@ -210,6 +228,35 @@ void AgiEngine::interpretCycle() {
+@@ -210,6 +228,35 @@
  	//_gfx->doUpdate();
  }
  
@@ -112,10 +109,9 @@ index 81421b47a4..930db287b4 100644
  // We return the current key, or 0 if no key was pressed
  uint16 AgiEngine::processAGIEvents() {
  	ScreenObjEntry *screenObjEgo = &_game.screenObjTable[SCREENOBJECTS_EGO_ENTRY];
-diff --git a/engines/agi/graphics.cpp b/engines/agi/graphics.cpp
-index 1bb1d20232..dd6c5b4163 100644
---- a/engines/agi/graphics.cpp
-+++ b/engines/agi/graphics.cpp
+diff -urN b/engines/agi/graphics.cpp m/engines/agi/graphics.cpp
+--- a/engines/agi/graphics.cpp	2026-07-26 14:21:49.319547778 +0000
++++ b/engines/agi/graphics.cpp	2026-07-26 14:21:49.325833061 +0000
 @@ -26,6 +26,7 @@
  
  #include "graphics/cursorman.h"
@@ -124,7 +120,7 @@ index 1bb1d20232..dd6c5b4163 100644
  
  #include "agi/agi.h"
  #include "agi/graphics.h"
-@@ -39,6 +40,13 @@ namespace Agi {
+@@ -39,6 +40,13 @@
  #include "agi/font.h"
  
  GfxMgr::GfxMgr(AgiBase *vm, GfxFont *font) : _vm(vm), _font(font) {
@@ -138,7 +134,7 @@ index 1bb1d20232..dd6c5b4163 100644
  	memset(&_paletteGfxMode, 0, sizeof(_paletteGfxMode));
  	memset(&_paletteTextMode, 0, sizeof(_paletteTextMode));
  
-@@ -151,6 +159,11 @@ void GfxMgr::initVideo() {
+@@ -151,6 +159,11 @@
  		break;
  	}
  
@@ -150,7 +146,7 @@ index 1bb1d20232..dd6c5b4163 100644
  	if (_font->isFontHires() || forceHires) {
  		// Upscaling enable
  		_upscaledHires = DISPLAY_UPSCALED_640x400;
-@@ -1157,6 +1170,146 @@ void GfxMgr::drawDisplayRectCGA(int16 x, int16 y, int16 width, int16 height, byt
+@@ -1157,6 +1170,146 @@
  /**
   * Draw a character to the display screen using text row and column coordinates
   */
@@ -297,10 +293,9 @@ index 1bb1d20232..dd6c5b4163 100644
  void GfxMgr::drawCharacter(int16 row, int16 column, byte character, byte foreground, byte background, bool disabledLook) {
  	int16 x = column;
  	int16 y = row;
-diff --git a/engines/agi/graphics.h b/engines/agi/graphics.h
-index 320019fa50..2eed38755a 100644
---- a/engines/agi/graphics.h
-+++ b/engines/agi/graphics.h
+diff -urN b/engines/agi/graphics.h m/engines/agi/graphics.h
+--- a/engines/agi/graphics.h	2026-07-26 14:21:49.368556121 +0000
++++ b/engines/agi/graphics.h	2026-07-26 14:21:49.375443294 +0000
 @@ -24,6 +24,13 @@
  
  #include "agi/font.h"
@@ -315,7 +310,7 @@ index 320019fa50..2eed38755a 100644
  namespace Agi {
  
  #define SCRIPT_WIDTH    160
-@@ -60,6 +67,18 @@ private:
+@@ -60,6 +67,18 @@
  	AgiBase *_vm;
  	GfxFont *_font;
  
@@ -334,7 +329,7 @@ index 320019fa50..2eed38755a 100644
  	uint8 _paletteGfxMode[256 * 3];
  	uint8 _paletteTextMode[256 * 3];
  
-@@ -69,6 +88,17 @@ private:
+@@ -69,6 +88,17 @@
  public:
  	GfxMgr(AgiBase *vm, GfxFont *font);
  
@@ -352,11 +347,10 @@ index 320019fa50..2eed38755a 100644
  	void initVideo();
  	void deinitVideo();
  	static void initPalette(uint8 *destPalette, const uint8 *paletteData, uint colorCount = 16, uint fromBits = 6, uint toBits = 8);
-diff --git a/engines/agi/keyboard.cpp b/engines/agi/keyboard.cpp
-index 3c19773ee8..30c44ef88b 100644
---- a/engines/agi/keyboard.cpp
-+++ b/engines/agi/keyboard.cpp
-@@ -130,6 +130,31 @@ void AgiEngine::processScummVMEvents() {
+diff -urN b/engines/agi/keyboard.cpp m/engines/agi/keyboard.cpp
+--- a/engines/agi/keyboard.cpp	2026-07-26 14:21:49.396573349 +0000
++++ b/engines/agi/keyboard.cpp	2026-07-26 14:21:49.403701331 +0000
+@@ -130,6 +130,31 @@
  			}
  			break;
  		case Common::EVENT_KEYDOWN:
@@ -388,11 +382,10 @@ index 3c19773ee8..30c44ef88b 100644
  			key = event.kbd.ascii;
  			if (event.kbd.keycode >= Common::KEYCODE_KP0 && event.kbd.keycode <= Common::KEYCODE_KP9) {
  				if (!(event.kbd.flags & Common::KBD_NUM)) {
-diff --git a/engines/agi/op_cmd.cpp b/engines/agi/op_cmd.cpp
-index 6d27452bd4..cb018272de 100644
---- a/engines/agi/op_cmd.cpp
-+++ b/engines/agi/op_cmd.cpp
-@@ -2083,10 +2083,15 @@ void cmdGetNum(AgiGame *state, AgiEngine *vm, uint8 *parameter) {
+diff -urN b/engines/agi/op_cmd.cpp m/engines/agi/op_cmd.cpp
+--- a/engines/agi/op_cmd.cpp	2026-07-26 14:21:49.425556777 +0000
++++ b/engines/agi/op_cmd.cpp	2026-07-26 14:21:49.432556858 +0000
+@@ -2083,10 +2083,15 @@
  
  	textMgr->inputEditOff();
  
@@ -411,11 +404,10 @@ index 6d27452bd4..cb018272de 100644
  
  	textMgr->promptRedraw();
  
-diff --git a/engines/agi/picture.cpp b/engines/agi/picture.cpp
-index 70ce126d9b..030c9762ec 100644
---- a/engines/agi/picture.cpp
-+++ b/engines/agi/picture.cpp
-@@ -814,6 +814,7 @@ void PictureMgr::showPicture(int16 x, int16 y, int16 width, int16 height) {
+diff -urN b/engines/agi/picture.cpp m/engines/agi/picture.cpp
+--- a/engines/agi/picture.cpp	2026-07-26 14:21:49.456791841 +0000
++++ b/engines/agi/picture.cpp	2026-07-26 14:21:49.465720144 +0000
+@@ -814,6 +814,7 @@
  	debugC(kDebugLevelPictures, "Show picture");
  
  	_gfx->render_Block(x, y, width, height);
@@ -423,7 +415,7 @@ index 70ce126d9b..030c9762ec 100644
  }
  
  /**
-@@ -859,6 +860,7 @@ void PictureMgr::showPictureWithTransition() {
+@@ -859,6 +860,7 @@
  	}
  
  	_gfx->render_Block(0, 0, SCRIPT_WIDTH, SCRIPT_HEIGHT);
@@ -431,11 +423,10 @@ index 70ce126d9b..030c9762ec 100644
  }
  
  } // End of namespace Agi
-diff --git a/engines/agi/systemui.cpp b/engines/agi/systemui.cpp
-index 40cd61af33..90a816d074 100644
---- a/engines/agi/systemui.cpp
-+++ b/engines/agi/systemui.cpp
-@@ -145,6 +145,30 @@ SystemUI::SystemUI(AgiEngine *vm, GfxMgr *gfx, TextMgr *text) {
+diff -urN b/engines/agi/systemui.cpp m/engines/agi/systemui.cpp
+--- a/engines/agi/systemui.cpp	2026-07-26 14:21:49.503042850 +0000
++++ b/engines/agi/systemui.cpp	2026-07-26 14:21:49.513557790 +0000
+@@ -145,6 +145,30 @@
  		break;
  	}
  
@@ -466,11 +457,10 @@ index 40cd61af33..90a816d074 100644
  	// Now replace some text again for some render modes
  	switch (_vm->_renderMode) {
  	case Common::kRenderAmiga:
-diff --git a/engines/agi/text.cpp b/engines/agi/text.cpp
-index cc02816bce..cda72a8904 100644
---- a/engines/agi/text.cpp
-+++ b/engines/agi/text.cpp
-@@ -338,6 +338,10 @@ Common::String rightAlign(Common::String line, va_list args) {
+diff -urN b/engines/agi/text.cpp m/engines/agi/text.cpp
+--- a/engines/agi/text.cpp	2026-07-26 14:21:49.540558101 +0000
++++ b/engines/agi/text.cpp	2026-07-26 14:21:49.549558205 +0000
+@@ -338,6 +338,10 @@
  }
  
  void TextMgr::displayText(const char *textPtr, bool disabledLook) {
@@ -481,7 +471,7 @@ index cc02816bce..cda72a8904 100644
  	Common::String textString;
  	if (_vm->isLanguageRTL()) {
  		textString = textPtr;
-@@ -357,11 +361,37 @@ void TextMgr::displayText(const char *textPtr, bool disabledLook) {
+@@ -357,11 +361,37 @@
  		if (!curCharacter)
  			break;
  
@@ -519,7 +509,7 @@ index cc02816bce..cda72a8904 100644
  void TextMgr::displayCharacter(byte character, bool disabledLook) {
  	TextPos_Struct charCurPos;
  
-@@ -426,7 +456,18 @@ void TextMgr::printAt(int16 textNr, int16 textPos_Row, int16 textPos_Column, int
+@@ -426,7 +456,18 @@
  }
  
  bool TextMgr::messageBox(const char *textPtr) {
@@ -538,7 +528,7 @@ index cc02816bce..cda72a8904 100644
  
  	if (_vm->getFlag(VM_FLAG_OUTPUT_MODE)) {
  		// non-blocking window
-@@ -630,6 +671,19 @@ void TextMgr::closeWindow(bool ttsStopSpeech) {
+@@ -630,6 +671,19 @@
  
  	_messageState.dialogue_Open = false;
  	_messageState.window_Active = false;
@@ -558,7 +548,7 @@ index cc02816bce..cda72a8904 100644
  }
  
  void TextMgr::statusRow_Set(int16 row) {
-@@ -1179,6 +1233,28 @@ void TextMgr::stringRememberForAutoComplete(bool entered) {
+@@ -1179,6 +1233,28 @@
   * @param originalText  String to wrap.
   * @param maxWidth      Length of line.
   */
@@ -587,7 +577,7 @@ index cc02816bce..cda72a8904 100644
  char *TextMgr::stringWordWrap(const char *originalText, int16 maxWidth, int16 *calculatedWidthPtr, int16 *calculatedHeightPtr) {
  	static char resultWrappedBuffer[2000];
  	int16 boxWidth = 0;
-@@ -1214,10 +1290,11 @@ char *TextMgr::stringWordWrap(const char *originalText, int16 maxWidth, int16 *c
+@@ -1214,10 +1290,11 @@
  		}
  		byte wordEndChar = originalText[curReadPos];
  
@@ -601,7 +591,7 @@ index cc02816bce..cda72a8904 100644
  			// Not enough space left
  
  			// If first character right after the new line is a space, skip over it
-@@ -1225,13 +1302,15 @@ char *TextMgr::stringWordWrap(const char *originalText, int16 maxWidth, int16 *c
+@@ -1225,13 +1302,15 @@
  				if (originalText[wordStartPos] == ' ') {
  					wordStartPos++;
  					wordLen--;
@@ -621,7 +611,7 @@ index cc02816bce..cda72a8904 100644
  			}
  
  			// Add new line
-@@ -1246,10 +1325,10 @@ char *TextMgr::stringWordWrap(const char *originalText, int16 maxWidth, int16 *c
+@@ -1246,10 +1325,10 @@
  				break;
  		}
  
@@ -635,11 +625,36 @@ index cc02816bce..cda72a8904 100644
  		curWritePos += wordLen;
  
  		if (wordEndChar == 0x0A) {
-diff --git a/engines/agi/text.h b/engines/agi/text.h
-index 54d61530ed..b4d1438029 100644
---- a/engines/agi/text.h
-+++ b/engines/agi/text.h
-@@ -123,6 +123,7 @@ public:
+@@ -1344,7 +1423,10 @@
+ 				break;
+ 			case 'g':
+ 				i = strtoul(originalText, nullptr, 10) - 1;
+-				safeStrcat(resultString, _vm->_game.logics[0].texts[i]);
++				// 繁體中文化：%g 插入的是 logic 0 的訊息，本身也是一則遊戲文字，
++				// 要各自查表。外層 displayText 只對「拼接完成」的整串查表，那串
++				// 不是表裡的 key，查不到就會留下英文（中英混雜）。
++				safeStrcat(resultString, _gfx->getChtTranslation(_vm->_game.logics[0].texts[i]));
+ 				break;
+ 			case 'w':
+ 				i = strtoul(originalText, nullptr, 10) - 1;
+@@ -1356,8 +1438,12 @@
+ 				break;
+ 			case 'm':
+ 				i = strtoul(originalText, nullptr, 10) - 1;
++				// 繁體中文化：同 %g，%m 插入的子訊息要先查表再遞迴展開。
++				// 例：「The briefing room contains ... %m16」的譯文保留了 %m16，
++				// 展開的那則若不查表就會變成「簡報室裡…。On the far wall are…」。
+ 				if (_vm->_game.logics[_vm->_game.curLogicNr].numTexts > i)
+-					safeStrcat(resultString, stringPrintf(_vm->_game.logics[_vm->_game.curLogicNr].texts[i]));
++					safeStrcat(resultString, stringPrintf(_gfx->getChtTranslation(
++						_vm->_game.logics[_vm->_game.curLogicNr].texts[i])));
+ 				break;
+ 			default:
+ 				break;
+diff -urN b/engines/agi/text.h m/engines/agi/text.h
+--- a/engines/agi/text.h	2026-07-26 14:21:49.571466636 +0000
++++ b/engines/agi/text.h	2026-07-26 14:21:49.577732655 +0000
+@@ -123,6 +123,7 @@
  	void displayAdjustRTL(int16 textRow, int16 textColumn, char *text, int16 calculatedWidth);
  	void displayText(const char *textPtr, bool disabledLook = false);
  	void displayCharacter(byte character, bool disabledLook = false);
@@ -647,7 +662,7 @@ index 54d61530ed..b4d1438029 100644
  
  	void displayTextInsideWindow(const char *textPtr, int16 windowRow, int16 windowColumn);
  
-@@ -134,6 +135,14 @@ public:
+@@ -134,6 +135,14 @@
  	bool messageBox(const char *textPtr);
  	void messageBox_KeyPress(uint16 newKey);
  
