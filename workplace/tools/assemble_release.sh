@@ -68,8 +68,15 @@ find "$out" -type f | sort | while read -r f; do
 	esac
 done
 
+# macOS 沒有 GNU 的 sha256sum，只有 shasum。兩者的輸出格式與 -c 行為相容。
+if command -v sha256sum >/dev/null 2>&1; then
+	sha256() { xargs sha256sum; }
+else
+	sha256() { xargs shasum -a 256; }
+fi
+
 # 相對路徑：玩家解包後是在包目錄下跑 sha256sum -c，記成打包機的絕對路徑會全數 not found。
-( cd "$out" && find . -type f ! -name SHA256SUMS -print | sort | xargs sha256sum > SHA256SUMS )
+( cd "$out" && find . -type f ! -name SHA256SUMS -print | sort | sha256 > SHA256SUMS )
 
 cd "$dist_dir"
 # 先刪舊檔：zip 對既有壓縮檔是「更新」模式，上一版多打進去的東西不會被移除。
