@@ -15,7 +15,6 @@ grep -F 'Running Police Quest' latest-sci-run.log >/dev/null
 
 for f in \
   captures/pq1-agi-cht-start.png \
-  captures/pq1-sci-real-menu.png \
   captures/pq1-sci-real-crawl.png \
   captures/pq1-sci-right-hallway.png \
   captures/pq1-sci-locker-room.png \

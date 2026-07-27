@@ -36,10 +36,6 @@ VGA 重製版（SCI）雙版本繁體中文化，跑在 ScummVM 上。
 |---|---|
 | ![AGI 標題](workplace/captures/pq1-agi-cht-start.png) | ![SCI 標題](workplace/captures/pq1-sci-overlay-start.png) |
 
-VGA 版的主選單與開場旁白：
-
-![SCI 主選單](workplace/captures/pq1-sci-real-menu.png)
-
 原版的訊息框與狀態列。AGI 是打字介面，`look` 一個房間就會吐出整段敘述：
 
 ![AGI 走廊](workplace/captures/pq1-agi-fontfix-02-look.png)
