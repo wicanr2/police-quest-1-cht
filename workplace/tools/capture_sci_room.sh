@@ -54,6 +54,10 @@ for spot in "$@"; do
 	sleep 6
 done
 
+# 游標停在剛點的位置會壓住文字，截圖前先移到角落
+xdotool mousemove --window "$wid" 628 470
+sleep 1
+
 import -window "$wid" "$out"
 kill $game 2>/dev/null || true
 echo "captured: $out"
