@@ -37,6 +37,12 @@ cp -a "$build_dir"/bin/. "$out/bin/"
 cp -a "$repo_root/README.md" "$out/README.md"
 cp -a "$workplace/CONTEXT.md" "$workplace/WORKLIST.md" "$out/"
 
+# README 內嵌的畫面也一起帶，否則包內的 README 全是破圖。只收它實際引用的那幾張。
+mkdir -p "$out/workplace/captures"
+grep -o 'workplace/captures/[^)]*\.png' "$out/README.md" | sort -u | while read -r shot; do
+	[ -f "$repo_root/$shot" ] && cp -a "$repo_root/$shot" "$out/workplace/captures/"
+done
+
 cat > "$out/安裝說明.txt" <<EOF
 《警察故事 1：追捕死亡天使》繁體中文化 —— $platform
 

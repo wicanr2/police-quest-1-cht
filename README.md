@@ -1,29 +1,97 @@
-# 《警察故事 1：追捕死亡天使》繁體中文化
+# 《警察故事：追捕死亡天使》繁體中文化
 
-這是給 ScummVM 使用的台灣繁體中文化工作樹，目標是將 Sierra 的
-`Police Quest: In Pursuit of the Death Angel` 轉為 Big5 執行期文字。
+Sierra 1987 年的 *Police Quest: In Pursuit of the Death Angel*，原版（AGI）與
+VGA 重製版（SCI）雙版本繁體中文化，跑在 ScummVM 上。
 
-## 版本
+1987 年，Sierra 找了一個真的當過十五年警察的人來寫遊戲。Jim Walls 把加州公路巡警的
+勤務手冊搬進了冒險遊戲：出車前要繞車檢查、攔查要先報車牌、逮捕要先上銬再搜身、
+宣讀米蘭達權利不能漏。漏一步，你不會馬上死，但分數會扣，或者幾個畫面之後，
+某個你以為處理完的嫌犯會從背後給你一槍。
 
-本專案把兩個版本完全分開處理：
+那個年代的台灣玩家多半是在沒有中文、沒有攻略站、只有雜誌翻譯的情況下摸完它的。
+這個 repo 是把那份手冊補上——AGI 版 2,816 則、SCI 版 3,566 則遊戲文字，
+以及為了讓中文真的能顯示出來，在引擎裡修掉的六個顯示缺陷。
 
-- 原版 Floppy DOS：AGI 2.0G，target `agi:pq1`。
-- VGA Remake：SCI/DOS，target `sci:pq1sci`。
+---
 
-兩者不是同一套資源，請勿混用 `original/agi` 與 `original/vga`。
+## 目錄
 
-## 安裝（玩家）
+- [畫面](#screens)
+- [為什麼是這款遊戲](#why)
+- [安裝與遊玩](#install)
+- [中文化做了什麼](#work)
+- [修掉的顯示缺陷](#fixes)
+- [驗收與已知限制](#verify)
+- [交付邊界](#boundary)
+
+---
+
+<a name="screens"></a>
+## 畫面
+
+兩版的標題都做了中文疊圖。原版的 logo 是 EGA 索引點陣，VGA 版是向量 pic 指令流，
+都不是能直接改的點陣圖，所以走引擎 render 期疊繪，原始美術一個 pixel 都沒動。
+
+| 原版（AGI, 1987） | VGA 重製版（SCI, 1992） |
+|---|---|
+| ![AGI 標題](workplace/captures/pq1-agi-cht-start.png) | ![SCI 標題](workplace/captures/pq1-sci-overlay-start.png) |
+
+VGA 版的主選單與開場旁白：
+
+![SCI 主選單](workplace/captures/pq1-sci-real-menu.png)
+
+原版的訊息框與狀態列。AGI 是打字介面，`look` 一個房間就會吐出整段敘述：
+
+![AGI 走廊](workplace/captures/pq1-agi-fontfix-02-look.png)
+
+VGA 版的 NPC 對話帶名字牌，旁白比原版囉唆得多，而且很愛揶揄亂點東西的玩家：
+
+![SCI NPC 對話](workplace/captures/pq1-sci-m4b-08-room17-dinkle-name-tag-fixed.png)
+
+![SCI 長旁白](workplace/captures/pq1-sci-m4b-11-room20-long-narration-morgan-office.png)
+
+警局的 CHIPSTER 2000 終端機——查車牌、查前科、查人事資料，是 PQ1 辦案的核心工具：
+
+![CHIPSTER 查詢](workplace/captures/pq1-sci-m4f-01-chipster-5rows.png)
+
+---
+
+<a name="why"></a>
+## 為什麼是這款遊戲
+
+《警察故事》在 Sierra 的產品線裡是異類。同期的《國王密使》在畫奇幻王國、
+《宇宙傳奇》在畫太空垃圾工，這款遊戲畫的是一個中年警員的上班日：點名、換制服、
+領無線電、繞車檢查、開單、寫報告。它的「解謎」不是找鑰匙開門，是照規定辦事。
+
+貝卡在〈[當警察從來就不是《金牌警校軍》——我玩《警察故事1》(Police Quest I) (1987)](https://bekanis.blogspot.com/2018/02/1-police-quest-i-1987.html)〉
+裡談過這種設計帶來的挫折感：關水龍頭、穿衣進浴室、歸還無線電與巡邏車鑰匙這些
+瑣事都可能影響結果，而遊戲不會提醒你。說明書裡那套開單、逮捕、無線電通報的
+SOP 不是背景設定，它就是遊戲規則本身。
+
+這也是中文化的難處所在。這款遊戲的文字有一半是程序性的——罰單欄位、無線電代碼、
+人事檔案、法庭判決書。翻錯一個術語，玩家就照著錯的規定辦案，然後失敗。所以
+專案裡有一份定案的警務術語表：`Detective` 一律「警探」不用「偵探」，
+`no bail warrant` 用台灣的「不得交保」不用「保釋」，10-4／187／APB 這類代碼一律保留。
+
+人名地名則反過來，一律保留英文原文（`Sonny`、`Dooley 警佐`、`Lytton`、`Blue Room`）。
+這不是偷懶——1980 年代的音譯沒有統一標準，而這遊戲的人名會出現在罰單、
+無線電呼號、人事檔案、法庭文件裡，任何一處音譯不一致，玩家就對不上。
+
+---
+
+<a name="install"></a>
+## 安裝與遊玩
 
 交付包只含中文化資料與打了中文 patch 的 ScummVM 執行檔，**不含遊戲本身**，
 請自行準備合法取得的原始遊戲資料。
 
-| 平台 | 檔案 | 內容 |
-|---|---|---|
-| Linux x86_64 | `pq1-cht-linux-x86_64.tar.gz` | 兩個 binary + 中文資料 |
-| Windows x86_64 | `pq1-cht-windows-x86_64.zip` | 兩個 exe + SDL2.dll + 中文資料 |
-| macOS universal | `pq1-cht-macos-universal.tar.gz` | arm64 + x86_64 雙弧 binary + 中文資料 |
+| 平台 | 檔案 |
+|---|---|
+| Linux x86_64 | `pq1-cht-linux-x86_64.tar.gz` |
+| Windows x86_64 | `pq1-cht-windows-x86_64.zip` |
+| macOS universal（arm64 + x86_64） | `pq1-cht-macos-universal.tar.gz` |
 
-解開後依包內的 `安裝說明.txt` 操作，重點是兩版的啟動方式不同：
+解開後依包內的 `安裝說明.txt` 操作。兩版的啟動方式**相反**，這點最容易踩：
 
 ```sh
 # 原版 Floppy DOS（AGI）：不要加 --language
@@ -34,104 +102,133 @@ bin/scummvm-pq1-sci --extrapath=<本包>/game/sci --language=tw --path=<你的�
 ```
 
 AGI 版是以「`game/agi` 裡有沒有 `pq1_big5.fnt`」決定要不要開中文，不吃 `--language`；
-它在 ScummVM 走 fallback 偵測，target 語言設成非英文反而無法啟動。SCI 版則相反。
+它在 ScummVM 走 fallback 偵測，target 語言設成非英文反而會無法啟動。SCI 版則相反。
 
-包內附 `SHA256SUMS`，在包目錄下執行 `sha256sum -c SHA256SUMS`（macOS 用
-`shasum -a 256 -c SHA256SUMS`）可驗證檔案完整性。
+包內附 `SHA256SUMS`，在包目錄下跑 `sha256sum -c SHA256SUMS`
+（macOS 用 `shasum -a 256 -c SHA256SUMS`）可驗證完整性。
 
-## 安裝（開發版）
+### 從原始碼重建
 
-1. 準備合法取得的原始遊戲資料；本專案不提供 `VOL.*`、`RESOURCE.*`、DOS 執行檔或 ROM。
-2. 將原版資料放入 `workplace/original/agi/`，VGA 資料放入 `workplace/original/vga/`。
-3. 使用 Docker 建置翻譯資料：
+```sh
+# Linux
+docker compose -f workplace/docker/compose.yml run --rm pq1-tools sh tools/build_linux_release.sh
+# Windows（mingw-w64 交叉編譯）
+docker compose -f workplace/docker/compose.yml run --rm pq1-mingw sh tools/build_windows_release.sh
+# macOS universal（Apple SDK 不能在 Linux 上交叉編譯，借 CI runner）
+gh workflow run build-cht-packages.yml
+```
 
-   ```sh
-   docker compose -f workplace/docker/compose.yml run --rm pq1-tools sh tools/build_targets.sh
-   ```
+---
 
-4. 使用對應的 `workplace/build/scummvm-pq1-agi` 或
-   `workplace/build/scummvm-pq1-sci` 啟動遊戲。SCI target 的設定檔範例在
-   `workplace/config/pq1sci.ini`，資料檔透過 `--extrapath=workplace/game/sci` 載入。
+<a name="work"></a>
+## 中文化做了什麼
 
-   Docker 內的乾淨 SCI target 可用專案腳本呼叫 ScummVM detector，避免手寫設定漏掉
-   `path`：
+| | 已翻譯 | 總鍵數 |
+|---|---|---|
+| AGI 原版 | 2,816 | 3,177 |
+| SCI VGA 重製版 | 3,566 | 3,667 |
 
-   ```sh
-   docker compose -f workplace/docker/compose.yml run --rm pq1-tools \
-     sh tools/run_sci_normal_route.sh
-   ```
+未翻的 462 筆已逐項分類，不是漏譯：215 筆是抽字工具誤抽的引擎 opcode 與 parser
+詞彙（`new.room`、`draw.pic`、`taxi` 這類，根本不會顯示給玩家），247 筆是刻意保留
+英文的人名、地址、車牌、VIN 與抽字雜訊。**可翻的遊戲文字已經翻完。**
 
-## 中文化範圍與現況
+翻譯流程是英文原文當查表 key、Big5 中文當 value，執行期由引擎做內容比對替換，
+原始遊戲資源一個 byte 都不改。`translation/batch/` 是版控來源，
+`tools/verify_batch.py` 會逐行核對 key 一致性、placeholder 數量與 Big5 可編碼性，
+`tools/normalize_names.py` 做全域譯名收斂。
 
-AGI 與 SCI 都已完成資源偵測、文字骨架、OBJECT 道具名稱、Big5／hi-res 字型與
-引擎 loader。最近一次產物統計為 AGI 2,816／3,177、SCI 3,566／3,667 筆翻譯，
-placeholder 與 Big5 validator 皆 0 errors；實機 loader 記錄為
-`AGI-CHT: 載入 2816 則翻譯` 與 `CHT: loaded 3566 translation entries`。
+字型是從譯文用字烘出來的 Big5 點陣子集，低解析 15px 與 hi-res 32×28 各一份。
+引擎硬寫的 UI 字串（狀態列、暫停、存讀檔）不在譯文表裡，另外用 `ENGINE_UI_CHARS`
+補烘進去——否則會出現「選擇」的「擇」字整格空白這種缺字。
 
-剩下未翻的鍵已逐項分類：AGI 361 筆中有 207 筆是抽字工具誤抽的引擎 opcode 與
-parser 詞彙（`new.room`、`draw.pic`、`taxi` 之類，不會顯示給玩家），其餘是人名、
-地址、車牌與 VIN 這類刻意保留英文的內容；SCI 101 筆同理。可翻的遊戲文字已翻完。
+---
 
-正常流程驗收仍在進行中，尚不能把目前產物視為完整發布版。NPC 對話、案件資料、
-失敗結局與 credits 仍需逐項截圖驗收；目前已有 AGI 狀態列與訊息框、SCI 主選單與
-開場旁白的中文畫面。
+<a name="fixes"></a>
+## 修掉的顯示缺陷
 
-Docker Xvfb 已驗證兩版標題中文疊圖：`workplace/captures/pq1-agi-cht-start.png`
-與 `workplace/captures/pq1-sci-overlay-start.png`。
+翻譯做完不等於中文能正確顯示。實機驗收時抓到六個缺陷，其中三個直接影響玩家看到的畫面。
 
-SCI 的完整 intro 會進入中文主選單；`pq1-sci-real-menu.png` 為 Docker 實際畫面，
-`pq1-sci-real-crawl.png`、`pq1-sci-after-crawl-pages.png`、
-`pq1-sci-locker-room.png` 與 `pq1-sci-locker-interact.png` 是正常新遊戲流程的
-開場旁白、警局走廊、更衣室與置物櫃互動畫面。
+### 字型高度對不上，大部分中文字畫不出來
 
-## 故事導讀
+AGI 的狀態列只顯示得出「得」，「分：」整個消失。追下去發現引擎用
+`loadPrefixedRaw(fontFile, 16)` 讀字型，但 `build_cht.py --size 15` 產出的字型每字
+只有 15 列。`loadPrefixedRaw` 按 `2 + height*2` bytes 逐筆讀，高度對不上就逐筆錯位，
+只有偶然對齊的字查得到 glyph，其餘畫成空白。SCI 端一直是 15，所以只有 AGI 中招。
 
-本作主角是利頓警察局警員 Sonny Bonds，玩家要依照警察勤務流程處理案件，
-而不是只靠任意點擊推進。關水龍頭、穿制服、檢查武器、攜帶無線電、交通攔查與
-無線電通報等細節，都可能影響遊戲結果。
+### `%m` 子訊息沒查翻譯表，畫面中英混雜
 
-關於本作寫實勤務與遊玩觀點，可參考貝卡的文章：
+原版會出現「簡報室裡有一座講台和四張寫報告用的桌子。On the far wall are eight
+pigeonholes.」這種半中半英。原因是 `stringPrintf` 展開 `%m`／`%g` 這類「插入另一則
+LOGIC 訊息」的佔位符時直接取原始英文，而外層只對拼接完成的整串查表——那串不是
+表裡的 key，當然查不到。改成展開前先各自查表。
 
-[貝卡的帕德嫩神殿：當警察從來就不是《金牌警校軍》——我玩《警察故事1》(Police Quest I) (1987)](https://bekanis.blogspot.com/2018/02/1-police-quest-i-1987.html)
+### 訊息框按英文寬度開，中文句尾被裁掉
 
-文章是背景導讀與玩家觀點來源；版本、資源格式與技術行為仍以本專案的遊戲檔、
-ScummVM log 與 Docker 驗收為準。
+| 修正前 | 修正後 |
+|---|---|
+| ![裁切](workplace/captures/pq1-sci-m4-99-wall-msg-truncated.png) | ![完整](workplace/captures/pq1-sci-m4b-07-room11-narcotics-car-long.png) |
 
-## 中文說明書前言
+「沒錯，是一面實心牆。」只畫出「沒錯，是一」。`GfxText16::Size()`（決定框大小）量的是
+英文原文，但 `Box()` 繪製前會換成中文——框按英文開好了，較寬的中文就被邊界切掉。
+在 `Size()` 補上同一套查表即可。
 
-Sonny Bonds 的第一天勤務不是電影式的追車，而是一套必須逐項遵守的警察 SOP。
-先讀勤務簡報，再穿制服、取回無線電與車鑰匙；出車前繞車檢查，執勤時依程序攔查、
-宣讀權利、搜身、保管證物並回報調度。這些看似瑣碎的動作正是遊戲規則，漏掉任何一步
-都可能扣分、停職或導向失敗結局。
+### 查詢終端機的欄位標籤上下黏成一團
 
-## 快速攻略（不含防拷答案）
+| 修正前 | 修正後 |
+|---|---|
+| ![重疊](workplace/captures/pq1-sci-m4c-01-chipster-personnel-dinkle.png) | ![排開](workplace/captures/pq1-sci-m4f-01-chipster-5rows.png) |
 
-- 開場先完成簡報，進更衣室開啟自己的置物櫃；公報中的 Grunters 對 Sows 最終比分
-  是置物櫃密碼 `269`。取制服、歸還無線電延伸器，再依勤務要求完成裝備。
-- 交通勤務中先做完整安全檢查，攜帶警棍、關好車門，攔查時查看駕照、開單並取得簽名。
-- 毒品案件中先聽 Laura 的埋伏指示，保持掩護；逮捕後先上手銬、搜身，再宣讀米蘭達權利，
-  並把毒品、車輛與其他物品當正式證物處理。
-- 不要把原始資源或防拷資料放入 patch 包；玩家必須自行準備合法取得的遊戲資料。
+CHIPSTER 終端機用 `kDisplay` 在絕對座標逐行畫字，行距是為 8px 拉丁字型排的，
+中文字高溢出，五列標籤的筆畫直接相黏，`D.O.H.` 幾乎看不清。這條路徑不經過 `Box()`，
+不會依字高自動撐開行距。
 
-## 驗收畫面索引
+解法不是縮字，而是在 640×400 的 display 空間重新分配 y——某列會撞到先前的框就往下推。
+實作上有兩個坑：這畫面**左右欄是交錯繪製**的，只記「上一個」框等於一直在跟另一欄比；
+以及順序必須用 script 指定的原始 y，用推完的位置判斷會讓已推下去的列看起來比後來的
+列還高。範圍限制在「`標籤 : 值`」的欄位式排版，因為同一個畫面的 20 列人事名單
+用完全相同的行距，但 20 列中文需要 300px、畫面只有 200px，推擠只會把前段推散。
 
-以下畫面均由 Docker/Xvfb 產生，英文對照與執行記錄位於 `workplace/captures/`、
-`workplace/latest-agi-run.log` 與 `workplace/latest-sci-run.log`：
+### 死亡畫面的按鈕文字被切掉
 
-- 中文／英文標題、開場旁白與主選單：`pq1-agi-cht-start.png`、`pq1-sci-real-menu.png`、
-  `pq1-sci-real-crawl.png`。
-- AGI 狀態列與訊息框（Big5 字型高度修正後）：`pq1-agi-fontfix-01-after-enter1.png`、
-  `pq1-agi-fontfix-02-look.png`。
-- 正常新遊戲警局路線：`pq1-sci-right-hallway.png`、`pq1-sci-locker-room.png`。
-- 置物櫃案件提示與密碼流程：`pq1-sci-locker-interact.png`、
-  `pq1-sci-locker-after-code.png`、`pq1-sci-locker-stage-open.png`、`pq1-sci-towel2.png`。
-- 目前仍在補做完整 Dooley／案件／結局逐場景 A/B 驗收；覆蓋率與驗收狀態以
-  [工作清單](workplace/WORKLIST.md) 為準。
+「重新開始」四個全形字塞不進為英文 `RESTART` 設計的按鈕寬度，「始」被切掉還跟隔壁
+「離開」黏在一起。這個不必動引擎——按鈕文字本來就該短，改譯「重來」與另兩個按鈕
+（還原／離開）一致即可。
 
-## Patch-only 邊界
+### 其餘兩個
 
-公開交付只包含引擎 patch、工具、翻譯 TSV、字型、checksum、README 與驗證記錄。
-`workplace/original/`、`workplace/game/`、編譯 binary 與截圖均為本機／建置產物，
-不應提交原始遊戲資料。
+版控的 `fontchinese.cpp` 與實際編譯的版本不一致（`kHiW=24` vs 現行字型 32 寬），
+從 repo 重建會拿到讀錯格式的字型；以及 `SHA256SUMS` 記成打包機的絕對路徑，
+玩家解包後照說明校驗會整份 not found。
 
-工作進度與未完成驗收項目見 [workplace/WORKLIST.md](workplace/WORKLIST.md)。
+---
+
+<a name="verify"></a>
+## 驗收與已知限制
+
+三個交付包都是「解開後在自己的環境跑」驗過的，不是只看 build 綠燈：Linux 解包實跑
+兩個 binary、Windows 用 `objdump` 確認 import 只有系統 DLL 加 SDL2.dll 並用 Wine 實跑、
+macOS 下載 CI artifact 後自行解析 Mach-O fat header 確認雙弧。三個包都通過 SHA256
+校驗與 patch-only 邊界掃描。
+
+實機畫面驗收涵蓋兩版的標題、主選單、訊息框、NPC 對話、長篇旁白、查詢終端機、
+道具欄、存讀檔 UI、死亡畫面。詳細清單與剩餘待驗項目見
+[workplace/WORKLIST.md](workplace/WORKLIST.md)。
+
+還沒做完的：AGI 的置物櫃密碼流程、交通攔查、撲克牌局，以及 SCI 的 Dooley 勤前簡報與
+Jack Cobb 對話——這幾個都得實際玩到那個進度才會觸發，用 debugger 跳場景繞不過去。
+
+不打算處理的（原版版面的硬限制，非翻譯缺工）：ScummVM 自己的存讀檔介面語言由
+ScummVM 決定、暫停選單與 credits 職銜卡是 baked art 不是文字資源、
+20 列的人事名單中文放不下畫面。
+
+---
+
+<a name="boundary"></a>
+## 交付邊界
+
+公開的只有引擎 patch、抽字與建置工具、翻譯 TSV、字型、README 與驗收畫面。
+`RESOURCE.*`、`VOL.*`、DOS 執行檔、防拷答案與 MT-32 ROM 一律不進版控也不進交付包，
+打包腳本每次都會掃一遍確認。原始遊戲資料請自行合法取得。
+
+上游 ScummVM pinned 在 `3d408ec3516f7c29314d8ae8fb7916f31c9cd9aa`，
+兩個 engine patch 都驗證過能從該 commit 乾淨套用並逐檔重現實際編譯樹。
