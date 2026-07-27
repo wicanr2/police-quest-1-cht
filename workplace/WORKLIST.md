@@ -36,12 +36,20 @@
 SCI 的開場動畫在 headless 下跳不過去，但 debugger 的 `room` 指令已修成能真正換場，
 可從 intro 直接跳進任意合法房間。三個關鍵點（來源：kb `retro-avg-taiwanese-localization`）：
 
+整套流程已固化成 `tools/capture_sci_room.sh`（可帶額外點擊座標，例如
+`sh tools/capture_sci_room.sh <binary> 117 <out.png> 400,33 110,182` 會進 CHIPSTER
+再點 PERSONNEL 與名單第四列）。裡面處理掉的四個坑：
+
 1. **Xvfb 沒有 window manager**，`xdotool` 全域送事件無效。要
    `WID=$(xdotool search --class scummvm | head -1)`，之後一律 `--window "$WID"`。
-2. **合法房號**看 `extract/dump-sci/script.*` 的編號，跳不存在的會 fatal 直接關遊戲。
-   遊戲場景集中在 10–67，另有 117、134、141、151–160 等。
-3. **同一個遊戲行程只能跳一次房**。跳第二次會 `GfxPorts::kernelSetActive was requested
+2. **Xvfb 起來後要暖機約 10 秒**才收得到鍵盤事件。太早送 `ctrl+alt+d`，console 不會開，
+   畫面停在標題卡，看起來像「`room` 指令沒作用」，實際上鍵根本沒進去。
+3. **換完場要先 `exit` 離開 console**，否則截到的是被 console 蓋住的畫面。
+4. **同一個遊戲行程只能跳一次房**。跳第二次會 `GfxPorts::kernelSetActive was requested
    to set invalid port id 3!` 然後黑屏。每換一個目標房間就重啟一次行程。
+
+合法房號看 `extract/dump-sci/script.*` 的編號，跳不存在的會 fatal 直接關遊戲。
+遊戲場景集中在 10–67，另有 117、134、141、151–160 等。
 
 進到房間後滑鼠完全正常（左右鍵、look／walk／hand 游標切換、物件互動都可用），
 只有 intro 期間無效。AGI 的 debugger `room` 只改變數不重繪，不能用這招，得實際走位；
@@ -49,13 +57,11 @@ SCI 的開場動畫在 headless 下跳不過去，但 debugger 的 `room` 指令
 
 ## 待驗收項目
 
-1. SCI 的 CHIPSTER 2000 電腦查詢畫面（`警徽 :`／`單位 :`／`姓名 :` 欄位標籤的排版）。
-   內容在 `message.117`，room 117 是合法房號但這輪沒跳（給 agent 的清單漏列）。
-2. SCI 的 Dooley 簡報、Laura Watts、Jack Cobb 對話、失敗結局／死亡畫面。
-3. AGI 的置物櫃密碼 269 流程、交通攔查、撲克牌局未走到。
-4. AGI 跨 key 拼接句（通緝單、逮捕摘要、報紙剪報、方位／速度模板）的串接語序，
+1. SCI 的 Dooley 簡報、Laura Watts、Jack Cobb 對話、失敗結局／死亡畫面。
+2. AGI 的置物櫃密碼 269 流程、交通攔查、撲克牌局未走到。
+3. AGI 跨 key 拼接句（通緝單、逮捕摘要、報紙剪報、方位／速度模板）的串接語序，
    已驗證的部分（失竊車輛播報）通順，其餘待確認。
-5. AGI 撲克牌型用 `\n` 硬拆詞配合 UI 版位（`Three of\na kind` → `三\n條`），排版待確認。
+4. AGI 撲克牌型用 `\n` 硬拆詞配合 UI 版位（`Three of\na kind` → `三\n條`），排版待確認。
 
 ## 已解決：CHIPSTER 2000 查詢畫面欄位重疊
 
@@ -141,7 +147,7 @@ PERSONNEL 名單 20 列用 10px 行距，中文放不下（需要 300px、畫面
 
 | 平台 | 驗證內容 |
 |---|---|
-| Linux | 解包實跑兩個 binary，log 出現 `AGI-CHT: 載入 2816 則翻譯`、`CHT: loaded 3566 translation entries`，截圖中文無缺字 |
+| Linux | 解包實跑兩個 binary，log 出現 `AGI-CHT: 載入 2816 則翻譯`、`CHT: loaded 3566 translation entries`，截圖中文無缺字；另用**包內**的 SCI binary 跳 room 117 點出人事記錄，確認 CHIPSTER 五列排版修正確實在出貨檔裡 |
 | Windows | `objdump` 確認 import 只有系統 DLL 加 SDL2.dll、已 strip；Wine 實跑 AGI 版，翻譯載入數相同 |
 | macOS | 下載 artifact 後自行解析 Mach-O fat header：兩個 binary 各有 x86_64 與 arm64 兩個 slice |
 
