@@ -48,6 +48,18 @@ xdotool type --window "$wid" --delay 60 "exit"
 xdotool key --window "$wid" Return
 sleep 10
 
+# PQ1_CLIP 設了就順便錄一段影片（推廣片用）。錄影在換場之後才開，console 畫面不會入鏡。
+# 這支是唯一實測能穩定驅動 SCI debugger 的路徑，所以錄影掛在這裡，不另寫一支。
+if [ -n "${PQ1_CLIP:-}" ]; then
+	eval "$(xdotool getwindowgeometry --shell "$wid")"
+	ffmpeg -y -f x11grab -video_size "${WIDTH}x${HEIGHT}" -framerate 15 \
+		-i ":99+${X},${Y}" -t "${PQ1_CLIP_SECS:-20}" \
+		-c:v libx264 -preset veryfast -threads 2 -pix_fmt yuv420p -an "$PQ1_CLIP" \
+		>/tmp/grab.log 2>&1 &
+	clip=$!
+	sleep 1
+fi
+
 # 額外的點擊：進了房間還要操作才會出現的畫面（例如 CHIPSTER 的人事記錄）
 for spot in "$@"; do
 	xdotool mousemove --window "$wid" "${spot%,*}" "${spot#*,}" click 1
@@ -57,6 +69,11 @@ done
 # 游標停在剛點的位置會壓住文字，截圖前先移到角落
 xdotool mousemove --window "$wid" 628 470
 sleep 1
+
+if [ -n "${PQ1_CLIP:-}" ]; then
+	wait $clip || true
+	echo "clip: $PQ1_CLIP"
+fi
 
 import -window "$wid" "$out"
 kill $game 2>/dev/null || true

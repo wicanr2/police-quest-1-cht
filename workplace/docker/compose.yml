@@ -31,3 +31,17 @@ services:
       - ../../../simon-1/scummvm-src:/upstream-agi-scummvm:ro
     stdin_open: true
     tty: true
+
+  # 推廣片合成。ffmpeg 相依約 400MB，跟 pq1-tools 分開以免每次建置都扛著。
+  pq1-video:
+    build:
+      context: .
+      dockerfile: Dockerfile.video
+    container_name: pq1-cht-video
+    working_dir: /workspace
+    cpus: 2
+    volumes:
+      - ..:/workspace
+      - ../..:/source:ro
+    stdin_open: true
+    tty: true

@@ -1,0 +1,13 @@
+FROM debian:bookworm-slim
+# 推廣片合成 + 實機錄影專用。x11grab 要跟遊戲同一個容器才抓得到 Xvfb，
+# 所以這裡也裝 ScummVM 的執行期相依（不是重編，binary 從 /workspace 掛進來）。刻意跟 pq1-tools 分開：ffmpeg 那串相依裝下去約 400MB，
+# 沒必要讓每次抽字／建置都扛著。kb game-promo-video-ffmpeg 的建議是預建一次，
+# 不要每跑一次 apt。
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates ffmpeg imagemagick fonts-noto-cjk fonts-noto-cjk-extra \
+    xvfb xdotool \
+    libsdl2-2.0-0 libmad0 libjpeg62-turbo libpng16-16 libvorbisfile3 libtheora0 && \
+    rm -rf /var/lib/apt/lists/* && \
+    sed -i 's/rights="none" pattern="@\*"/rights="read" pattern="@*"/' \
+        /etc/ImageMagick-6/policy.xml
+WORKDIR /workspace
