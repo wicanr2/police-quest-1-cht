@@ -24,7 +24,7 @@ Lytton 這座加州小城的白天安靜得不像話：陽光、棕櫚樹、更�
 
 [![宣傳影片](workplace/captures/pq1-promo-thumb.png)](https://youtu.be/HXHRdbheqoE)
 
-58 秒，EGA 與 VGA 實機畫面交錯，配樂是原版 MT-32：
+56 秒，EGA 與 VGA 實機畫面交錯，配樂是原版 MT-32：
 **[youtu.be/HXHRdbheqoE](https://youtu.be/HXHRdbheqoE)**
 
 ---

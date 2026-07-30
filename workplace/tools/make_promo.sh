@@ -26,6 +26,8 @@ clips=$root/clips
 audio=$root/audio
 work=$root/work
 out=${1:-$root/pq1-cht-promo.mp4}
+# work/ 每次清空：改分鏡後舊段落留著會讓人對不上長度（雖然 concat 只吃清單裡的）
+rm -rf "$work"
 mkdir -p "$work"
 
 esc() { printf '%s' "$1" | sed "s/:/\\\\:/g; s/'/\\\\\\\\'/g"; }
@@ -57,16 +59,24 @@ fade=t=in:st=0:d=0.4,fade=t=out:st=$(awk "BEGIN{print $s-0.4}"):d=0.4,format=yuv
 echo "1/4 標題與字卡"
 card "$work/01-title.mp4" 4.0 "$TITLE" "$SUB"
 card "$work/03-mid.mp4"   2.5 "兩個版本都做" "1987 AGI／EGA　·　1992 VGA Remake"
-card "$work/06-end.mp4"   5.0 "$REPO" "patch-only．原始遊戲資料請自備" 24
+card "$work/08-end.mp4"   5.0 "$REPO" "patch-only．原始遊戲資料請自備" 24
 
 echo "2/4 實機片段"
-seg "$work/02-agi.mp4"     "$clips/agi.mp4"          4  16 "原版 1987　AGI／EGA"
-seg "$work/04-street.mp4"  "$clips/sci-street.mp4"   2  14 "VGA Remake 1992"
-seg "$work/05-chipster.mp4" "$clips/sci-chipster.mp4" 2  17 "CHIPSTER 2000　查嫌犯與車籍"
+# 取樣點是照著素材裡「中文什麼時候在畫面上」挑的，不是隨便切。第一版 VGA 段 31 秒
+# 裡有 14 秒是無字街景、5 秒是全英文的人事名單，看起來像 VGA 版根本沒中文化。
+#   agi.mp4        走廊完整敘述在 5–11s
+#   sci-npc        Russ 的對白在 0–8s
+#   sci-portrait   Morgan 的對白只在 0–4s（之後自動關掉）
+#   sci-chipster   人事記錄卡在 7s 之後
+seg "$work/02-agi.mp4"      "$clips/agi.mp4"           4  16 "原版 1987　AGI／EGA"
+seg "$work/04-street.mp4"   "$clips/sci-street.mp4"    2   4 "VGA Remake 1992"
+seg "$work/05-npc.mp4"      "$clips/sci-npc.mp4"       0.5 8 "VGA　NPC 對話帶名字牌"
+seg "$work/06-portrait.mp4" "$clips/sci-portrait.mp4"  0   4 "VGA　重要角色有頭像"
+seg "$work/07-chipster.mp4" "$clips/sci-chipster.mp4"  7  12 "CHIPSTER 2000　查嫌犯與車籍"
 
 echo "3/4 串接"
 : > "$work/list.txt"
-for f in 01-title 02-agi 03-mid 04-street 05-chipster 06-end; do
+for f in 01-title 02-agi 03-mid 04-street 05-npc 06-portrait 07-chipster 08-end; do
 	echo "file '$work/$f.mp4'" >> "$work/list.txt"
 done
 ffmpeg -y -f concat -safe 0 -i "$work/list.txt" -c copy "$work/video.mp4" >/dev/null 2>&1
