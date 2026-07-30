@@ -58,7 +58,8 @@ SCI 的開場動畫在 headless 下跳不過去，但 debugger 的 `room` 指令
 ## 待驗收項目
 
 1. SCI 的 Dooley 簡報、Laura Watts、Jack Cobb 對話、失敗結局／死亡畫面。
-2. AGI 的置物櫃密碼 269 流程、交通攔查、撲克牌局未走到。
+2. AGI 的交通攔查、撲克牌局未走到。（原本這條還列了「置物櫃密碼 269 流程」，是誤植：
+   AGI 沒有密碼鎖，抽字表 `combination` 命中 0、`WORDS.TOK` 也沒有 `269`。）
 3. AGI 跨 key 拼接句（通緝單、逮捕摘要、報紙剪報、方位／速度模板）的串接語序，
    已驗證的部分（失竊車輛播報）通順，其餘待確認。
 4. AGI 撲克牌型用 `\n` 硬拆詞配合 UI 版位（`Three of\na kind` → `三\n條`），排版待確認。
@@ -153,8 +154,13 @@ PERSONNEL 名單 20 列用 10px 行距，中文放不下（需要 300px、畫面
   `assemble_release.sh` 會複製進交付包的 `docs/`。`CLAUDE.md` 的邊界條款已同步改成
   「單點例外」，其餘防拷／破解素材照舊不收——原始 `SENHAS.TXT` 與
   `protections/PQ1 VGA Codes.txt` 仍隨 `workplace/original/` 被 gitignore 擋著。
-- **遊戲內指路。** `translation/batch/310-sci-code-hints.tsv` 在四句代碼相關對白後面
-  加了指路（三句指向速查表，拘留所問醉漢罪名那句直接標「酒後駕車 21603」）。
+- **VGA 有兩個查手冊關卡，不只條號。** 更衣室置物櫃的密碼 269 同樣要查原版盒裝附的
+  《Lytton 公報》——遊戲只說「密碼是 Grunters 對 Sows 季後賽決賽的最終比分」，
+  但整包 message 資源掃過，這兩隊只出現在提示文字本身，沒有任何一則報導寫出比分。
+  AGI 沒有這個鎖（`combination` 命中 0、`WORDS.TOK` 無 `269`）。
+- **遊戲內指路。** `translation/batch/310-sci-code-hints.tsv` 在六句相關對白後面加了
+  答案或指路（三句指向速查表，拘留所問醉漢罪名那句標「酒後駕車 21603」，
+  置物櫃兩句標「269」）。
   放在 batch 層是因為 `sci-translation.tsv` 每次都由 skeleton + batch 重新合成，
   直接改檔會在下次 `build_targets.sh` 被蓋掉。
   ⚠ 21603 是從遊戲自己的對白推的（Paul 說法官對 DUI 沒耐性、嫌犯「喝得很茫」），
