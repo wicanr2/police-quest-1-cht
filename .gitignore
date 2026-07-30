@@ -38,6 +38,7 @@ workplace/translation/staging/
 # Screenshots are build products. Only the ones the README cites as acceptance
 # evidence are versioned.
 workplace/captures/*
+!workplace/captures/pq1-promo-thumb.png
 !workplace/captures/pq1-agi-cht-start.png
 !workplace/captures/pq1-agi-fontfix-01-after-enter1.png
 !workplace/captures/pq1-agi-fontfix-02-look.png
