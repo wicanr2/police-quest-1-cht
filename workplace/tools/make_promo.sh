@@ -60,7 +60,7 @@ card "$work/03-mid.mp4"   2.5 "兩個版本都做" "1987 AGI／EGA　·　1992 V
 card "$work/06-end.mp4"   5.0 "$REPO" "patch-only．原始遊戲資料請自備" 24
 
 echo "2/4 實機片段"
-seg "$work/02-agi.mp4"     "$clips/agi.mp4"          8  16 "原版 1987　AGI／EGA"
+seg "$work/02-agi.mp4"     "$clips/agi.mp4"          4  16 "原版 1987　AGI／EGA"
 seg "$work/04-street.mp4"  "$clips/sci-street.mp4"   2  14 "VGA Remake 1992"
 seg "$work/05-chipster.mp4" "$clips/sci-chipster.mp4" 2  17 "CHIPSTER 2000　查嫌犯與車籍"
 
