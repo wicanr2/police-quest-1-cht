@@ -184,3 +184,22 @@ PERSONNEL 名單 20 列用 10px 行距，中文放不下（需要 300px、畫面
 - Linux：`docker compose -f docker/compose.yml run --rm pq1-tools sh tools/build_linux_release.sh`
 - Windows：`docker compose -f docker/compose.yml run --rm pq1-mingw sh tools/build_windows_release.sh`
 - macOS：`gh workflow run build-cht-packages.yml`（Apple SDK 不能在 Linux 上交叉編譯）
+
+### VGA 完整包（本機限定）
+
+`tools/assemble_full.sh <build_dir> <platform>` 組出解開就能玩的 VGA 版：patch-only 的
+中文資料與 binary，加上 `original/vga` 的 `RESOURCE.*`／`MESSAGE.MAP`，另附啟動腳本
+（`開始遊戲.sh`／`.bat`）與條號速查。AGI 的 binary 會被移除——完整包裡沒有對應的 AGI
+資料，帶著只會讓人誤會。
+
+**產物不進 Git、不上 Release。** 腳本硬性要求輸出落在 `dist-all/`（`.gitignore` 第 8 行
+擋著），repo 裡留的是腳本本身，讓「rebuild 出得來、有紀錄可查」。patch-only 的
+`assemble_release.sh` 有一段禁列掃描會擋下 `RESOURCE.*`，這支刻意不掃，差別就在這裡。
+
+    docker compose -f docker/compose.yml run --rm pq1-tools sh -c '
+      PQ1_REPO_ROOT=/source PQ1_WORKPLACE=/workspace PQ1_DIST_DIR=/workspace/dist-all \
+      sh /workspace/tools/assemble_full.sh /workspace/.build-linux linux-x86_64'
+
+三平台實測產出 14.2／19.8／21.4 MB（Linux／macOS／Windows）。Linux 包解到乾淨目錄後
+用包內的 `開始遊戲.sh` 實跑通過，log 出現 `CHT: loaded 3566 translation entries`，
+中文標題疊圖正常。
