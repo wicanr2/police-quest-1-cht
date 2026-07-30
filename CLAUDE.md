@@ -53,7 +53,11 @@
 - `kFormat` 的 `%s/%d` 模板要在格式化前翻譯；插入的 `%s` 也要在模板已翻譯時查表，格式不安全就退回英文。
 - key 與查詢字串的空白、CR/LF、tab 要雙邊正規化；選單 padding 空格不可無意刪除。
 - 含硬換行的 crawl/過場 script 字串先整理成單行 key，避免逐行 TSV parser 把整段丟掉。
-- Big5 字型以所有譯文 value 建構，標點與引擎硬寫字串也必須有 glyph；ETEN 點陣字優先於縮小 TTF。
+- Big5 字型以所有譯文 value 建構，標點與引擎硬寫字串也必須有 glyph。
+- **[HARD] 字形一律用倚天點陣字（ETEN）**，TTF 只當 Big5 缺字 fallback。AGI 的 15px 與 SCI 的
+  hi-res 32×28 都走倚天：`tools/extract_eten.py` 從光碟映像抽 `STDFONT.15`／`SPCFONT.15`／
+  `SPCFSUPP.15`（三個都要，漏帶符號檔會讓標點整批掉 fallback），`tools/eten_font.py` 依 Big5
+  分區索引取字，hi-res 用最近鄰放大、不做平滑。2026-07-30 換裝後四個字型檔 fallback 皆為 0。
 - 斷行以顯示欄位計算，不能按 Big5 byte；檢查日文 SJIS kinsoku 是否誤傷 Big5。
 - 引擎硬寫 Big5 C++ 字串要讓 clang 安全：反斜線十六進位 escape 後若接 hex 字元，要用相鄰字串打斷。
 - 每項驗收都要讀實際截圖；中文與英文同場景 A/B 對照，不能只看測試綠燈或覆蓋率。

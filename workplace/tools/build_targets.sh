@@ -12,6 +12,10 @@ python3 tools/merge_translation_layers.py translation/sci-skeleton.tsv \
   translation/sci-translation.tsv --base /tmp/pq1-sci-prefill.tsv \
   --batches translation/batch
 
+# 字形一律用倚天點陣字（CLAUDE.md §2）。光碟是使用者自有物，映像與抽出的字型都不進 Git；
+# 這步冪等，字型已在就不會重抽。--font/--face 那組 TTF 只當真缺字的 fallback。
+python3 tools/extract_eten.py
+
 python3 tools/build_cht.py translation/agi-translation.tsv game/agi \
   --size 15 --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
 python3 tools/build_cht.py translation/sci-translation.tsv game/sci \

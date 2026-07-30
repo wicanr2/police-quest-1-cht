@@ -11,7 +11,9 @@
 用法:build_cht.py <in_utf8_tsv> <out_dir> [--size N] [--font PATH] [--face IDX]
 純輸出;字型渲染用 Pillow。
 """
-import sys, struct, argparse
+import sys, os, struct, argparse
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from eten_font import EtenFont
 from PIL import Image, ImageFont, ImageDraw
 
 WIDTH = 16  # Big5Font 固定字寬 kChineseTraditionalWidth
@@ -80,6 +82,8 @@ def main():
     # 預設古籍風明體(AR PL UMing TW);face 2 = TW
     ap.add_argument("--font", default="/usr/share/fonts/truetype/arphic/uming.ttc")
     ap.add_argument("--face", type=int, default=2)
+    ap.add_argument("--eten", default="out/eten",
+                    help="倚天點陣字目錄（STDFONT.15/SPCFONT.15/SPCFSUPP.15）")
     ap.add_argument("--corrections", default="translation/corrections.tsv",
                     help="錯誤中文\\t正確中文,子字串替換(可無)")
     a = ap.parse_args()
@@ -143,9 +147,14 @@ def main():
             out.write(b"\n")
 
     # 2) 烘 Big5 字型(只含用到的字)
+    #    字形以倚天點陣字為主，TTF 只補倚天查不到的真缺字。倚天是為 16x15 手工調的，
+    #    TTF 縮到這個尺寸會糊、筆劃比例也不對。
+    eten = EtenFont(a.eten)
     font = ImageFont.truetype(a.font, H, index=a.face)
     glyphs = []  # (big5code, bytes)
     baked = 0
+    from_eten = 0
+    fallback = []
     for ch in sorted(chars):
         try:
             b5 = ch.encode("big5")
@@ -154,6 +163,22 @@ def main():
         if len(b5) != 2:
             continue
         code = (b5[0] << 8) | b5[1]  # 高位元組 >=0x81 → 0x8000 已設
+
+        bits = eten.render(ch, WIDTH, H)
+        if bits is not None:
+            rows_bytes = bytearray()
+            for y in range(H):
+                for byte_i in range(WIDTH // 8):
+                    v = 0
+                    for bit in range(8):
+                        v = (v << 1) | bits[y][byte_i * 8 + bit]
+                    rows_bytes.append(v)
+            glyphs.append((code, bytes(rows_bytes)))
+            baked += 1
+            from_eten += 1
+            continue
+        fallback.append(ch)
+
         # 渲染到 WIDTH×H 1bpp:以字面 ink bbox 置中,避免全形標點/小字偏高。
         img = Image.new("L", (WIDTH, H), 0)
         d = ImageDraw.Draw(img)
@@ -188,6 +213,8 @@ def main():
 
     print(f"譯文 {len(rows)} 則 → {runtime}")
     print(f"字型 {baked} 字 (H={H}, W={WIDTH}) → {fnt}")
+    print(f"  倚天 {from_eten} 字，TTF fallback {len(fallback)} 字"
+          + ("：" + "".join(fallback) if fallback else ""))
 
 if __name__ == "__main__":
     main()

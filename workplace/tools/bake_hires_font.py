@@ -9,6 +9,9 @@
   掃所有 tsv 的中文(Big5 雙位元組字),各烘一個 hi-res glyph。
 """
 import sys, struct, argparse
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from eten_font import EtenFont
 from PIL import Image, ImageFont, ImageDraw
 
 def main():
@@ -20,6 +23,8 @@ def main():
     ap.add_argument("--size", type=int, default=27, help="字型 pt(留描邊餘裕,略小於 height)")
     ap.add_argument("--font", default="/usr/share/fonts/truetype/arphic/uming.ttc")
     ap.add_argument("--face", type=int, default=2)
+    ap.add_argument("--eten", default="out/eten",
+                    help="倚天點陣字目錄（STDFONT.15/SPCFONT.15/SPCFSUPP.15）")
     a = ap.parse_args()
     W, H = a.width, a.height
     # W 不必為 8 倍數（rowBytes 用 ceil）
@@ -43,11 +48,33 @@ def main():
     from build_cht import ENGINE_UI_CHARS
     chars.update(ENGINE_UI_CHARS)
 
+    # 同 build_cht.py：倚天為主、TTF 只補真缺字。hi-res 是把 16x15 放大到 32x28，
+    # 用最近鄰而不是平滑縮放——點陣字一平滑就糊，那正是不用 TTF 的理由。
+    eten = EtenFont(a.eten)
     font = ImageFont.truetype(a.font, a.size, index=a.face)
     glyphs = []
+    from_eten = 0
+    fallback = []
+    row_bytes_n = (W + 7) // 8
     for ch in sorted(chars):
         b5 = ch.encode("big5")
         code = (b5[0] << 8) | b5[1]
+
+        bits = eten.render(ch, W, H)
+        if bits is not None:
+            rows = bytearray()
+            for y in range(H):
+                for byte_i in range(row_bytes_n):
+                    v = 0
+                    for bit in range(8):
+                        x = byte_i * 8 + bit
+                        v = (v << 1) | (bits[y][x] if x < W else 0)
+                    rows.append(v)
+            glyphs.append((code, bytes(rows)))
+            from_eten += 1
+            continue
+        fallback.append(ch)
+
         img = Image.new("L", (W, H), 0)
         d = ImageDraw.Draw(img)
         try:
@@ -75,7 +102,9 @@ def main():
             out.write(struct.pack(">H", code))
             out.write(bmp)
         out.write(struct.pack(">H", 0xFFFF))
-    print(f"hi-res 字型 {len(glyphs)} 字 (W={W}, H={H}, size={a.size}) → {a.out}")
+    print(f"hi-res 字型 {len(glyphs)} 字 (W={W}, H={H}) → {a.out}")
+    print(f"  倚天 {from_eten} 字，TTF fallback {len(fallback)} 字"
+          + ("：" + "".join(fallback) if fallback else ""))
 
 if __name__ == "__main__":
     main()
