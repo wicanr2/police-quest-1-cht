@@ -55,11 +55,12 @@ Lytton 這座加州小城的白天安靜得不像話：陽光、棕櫚樹、更�
 
 ![AGI 走廊](workplace/captures/pq1-agi-fontfix-02-look.png)
 
-VGA 版的 NPC 對話帶名字牌，旁白比原版囉唆得多，而且很愛揶揄亂點東西的玩家：
+VGA 版的 NPC 對話帶名字牌，重要角色還有頭像。原版對白比 AGI 囉唆得多，
+而且很愛揶揄亂點東西的玩家：
 
 ![SCI NPC 對話](workplace/captures/pq1-sci-m4b-08-room17-dinkle-name-tag-fixed.png)
 
-![SCI 長旁白](workplace/captures/pq1-sci-m4b-11-room20-long-narration-morgan-office.png)
+![SCI 角色頭像對話](workplace/captures/pq1-sci-m4b-11-room20-long-narration-morgan-office.png)
 
 警局的 CHIPSTER 2000 終端機——查車牌、查前科、查人事資料，是 PQ1 辦案的核心工具：
 
@@ -196,6 +197,9 @@ LOGIC 訊息」的佔位符時直接取原始英文，而外層只對拼接完�
 |---|---|
 | ![裁切](workplace/captures/pq1-sci-m4-99-wall-msg-truncated.png) | ![完整](workplace/captures/pq1-sci-m4b-07-room11-narcotics-car-long.png) |
 
+> 兩張「修正前」與上面這張「修正後」是缺陷還在時留下的畫面，用的還是換倚天之前的
+> 字型，沒辦法重錄——缺陷早就修掉了。其餘畫面都是換字型後重新擷取的。
+
 「沒錯，是一面實心牆。」只畫出「沒錯，是一」。`GfxText16::Size()`（決定框大小）量的是
 英文原文，但 `Box()` 繪製前會換成中文——框按英文開好了，較寬的中文就被邊界切掉。
 在 `Size()` 補上同一套查表即可。
@@ -246,8 +250,8 @@ macOS 下載 CI artifact 後自行解析 Mach-O fat header 確認雙弧。三個
 道具欄、存讀檔 UI、死亡畫面。詳細清單與剩餘待驗項目見
 [workplace/WORKLIST.md](workplace/WORKLIST.md)。
 
-還沒做完的：AGI 的置物櫃密碼流程、交通攔查、撲克牌局，以及 SCI 的 Dooley 勤前簡報與
-Jack Cobb 對話——這幾個都得實際玩到那個進度才會觸發，用 debugger 跳場景繞不過去。
+還沒做完的：AGI 的交通攔查與撲克牌局，以及 SCI 的 Dooley 勤前簡報與 Jack Cobb 對話
+——這幾個都得實際玩到那個進度才會觸發，用 debugger 跳場景繞不過去。
 
 不打算處理的（原版版面的硬限制，非翻譯缺工）：ScummVM 自己的存讀檔介面語言由
 ScummVM 決定、暫停選單與 credits 職銜卡是 baked art 不是文字資源、

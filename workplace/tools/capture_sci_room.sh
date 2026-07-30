@@ -61,8 +61,13 @@ if [ -n "${PQ1_CLIP:-}" ]; then
 fi
 
 # 額外的點擊：進了房間還要操作才會出現的畫面（例如 CHIPSTER 的人事記錄）
+# 座標格式 x,y 是左鍵；單獨的 r 是右鍵（SCI1.1 用右鍵輪換游標，look/hand 要靠它切）
 for spot in "$@"; do
-	xdotool mousemove --window "$wid" "${spot%,*}" "${spot#*,}" click 1
+	if [ "$spot" = r ]; then
+		xdotool click --window "$wid" 3
+	else
+		xdotool mousemove --window "$wid" "${spot%,*}" "${spot#*,}" click 1
+	fi
 	sleep 6
 done
 
