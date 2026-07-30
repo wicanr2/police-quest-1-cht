@@ -166,36 +166,49 @@ PERSONNEL 名單 20 列用 10px 行距，中文放不下（需要 300px、畫面
   ⚠ 21603 是從遊戲自己的對白推的（Paul 說法官對 DUI 沒耐性、嫌犯「喝得很茫」），
   沒有實機驗過——room 35 要有押解狀態才進得去，debugger 跳不進去。
 
-## 推廣片（2026-07-30，58.5 秒）
+## 推廣片（2026-07-30，55.6 秒）
 
-`out/promo/pq1-cht-promo.mp4`，640×480、15fps、1.7 MB。分鏡：標題卡 → AGI 實機 16s →
-「兩個版本都做」字卡 → VGA 街景 14s → VGA CHIPSTER 查詢 17s → repo 字卡。
+`out/promo/pq1-cht-promo.mp4`，640×480、15fps、1.6 MB。公開於
+<https://youtu.be/uQCkoJ-XURY>（使用者上傳）。分鏡：
+
+| 段 | 長度 | 內容 |
+|---|---|---|
+| 標題卡 | 4.0s | 遊戲名 + 繁體中文化 |
+| AGI 實機 | 16s | 走廊 `look` 的完整中文敘述（素材 5–11s 有字，故從 4s 起取） |
+| 字卡 | 2.5s | 兩個版本都做 |
+| VGA 街景 | 4s | 轉場空鏡 |
+| VGA NPC 對話 | 8s | room 17，Russ 四行對白帶名字牌 |
+| VGA 頭像對話 | 4s | room 20，Morgan 對白帶頭像（素材只有 0–4s 有字） |
+| VGA CHIPSTER | 12s | 人事記錄卡（素材 7s 後才出現） |
+| 片尾卡 | 5.0s | repo 網址 |
 
 **素材全是原版真實輸出**（`rulebook/93` 鐵則）：畫面是 x11grab 實錄的遊玩過程，
 配樂是 ScummVM 的 MT-32 模擬（munt + 原版 ROM）用 `SDL_AUDIODRIVER=disk` 實錄，
 不是自寫合成器逼近。ROM 從 `~/cht/mt32/` 複製到 `out/promo/extra/`，不進 Git。
+2026-07-30 換倚天字後畫面全部重錄，配樂沿用（音訊不受字型影響）。
 
-四支工具：
+五支工具：
 
 | 工具 | 做什麼 |
 |---|---|
 | `tools/record_mt32.sh` | 用 `startsound <id>` 逐首試播並實錄。PQ1 VGA 只有 sound 82、86 有音樂，遊戲場景本身幾乎不放配樂，片頭主題得從啟動後前 20 秒錄 |
 | `tools/capture_clip.sh` | 錄 AGI 實機片段，輸入用腳本描述（key／type／click／wait） |
-| `tools/capture_sci_room.sh` | 加了 `PQ1_CLIP` 環境變數就順便錄影。SCI 的錄影掛在這支而不是 `capture_clip.sh`，因為它是唯一實測能穩定驅動 debugger 換場的路徑 |
+| `tools/capture_agi_shot.sh` | AGI 靜態截圖，支援流程中途 `shot` |
+| `tools/capture_sci_room.sh` | 加 `PQ1_CLIP` 就順便錄影。SCI 的錄影掛在這支而不是 `capture_clip.sh`，因為它是唯一實測能穩定驅動 debugger 換場的路徑 |
 | `tools/make_promo.sh` | ffmpeg 合成。設計 token 在檔案最上面，換遊戲只改那幾行 |
 
 踩到的坑，都寫進各腳本註解了：
 
-1. **`read -r verb a b` 會吃掉參數**。`type room 117` 被拆成 `a=room`、`b=117`，只打出
+1. **[最貴的一個] 取樣點要照「中文什麼時候在畫面上」挑，不能憑感覺切**。第一版 VGA 段
+   31 秒裡，前 14 秒是無字街景、接著 5 秒是全英文的人事名單，中文記錄卡只在最後
+   12 秒出現——使用者看完的評語是「VGA 版在影片內沒有看到任何中文」。逐格抽樣盤點後
+   才發現屬實。現在每段的起點都是量出來的（見上表括號），VGA 段 28 秒裡有 24 秒有中文。
+   **做完影片要逐格抽樣自己看過，別只看有沒有合成成功。**
+2. **`read -r verb a b` 會吃掉參數**。`type room 117` 被拆成 `a=room`、`b=117`，只打出
    `room`，換場整個失效卻沒有任何錯誤訊息，看起來像 debugger 壞掉。
-2. **Xvfb 要暖機約 10 秒**才收得到鍵盤事件，太早送 `ctrl+alt+d` 就是靜靜地沒反應。
-3. **配樂要比影像長**。第一版音樂 46.6s、影像 58.5s，`-shortest` 直接砍掉片尾字卡。
-4. **片尾網址 40 級字會超出 640 寬**被切掉左右兩端，字級要能個別指定。
-
-**已公開**（2026-07-30 使用者決定並自行上傳）：<https://youtu.be/HXHRdbheqoE>。
-README 開場用 `captures/pq1-promo-thumb.png` 當封面連過去，縮圖是自己從 clip 產的，
-不引用 YouTube 的外站圖。mp4 本身仍不進 Git（`out/` 被 gitignore），要重出跑
-`tools/make_promo.sh`。
+3. **Xvfb 要暖機約 10 秒**才收得到鍵盤事件，太早送 `ctrl+alt+d` 就是靜靜地沒反應。
+4. **配樂要比影像長**。第一版音樂 46.6s、影像 58.5s，`-shortest` 直接砍掉片尾字卡。
+5. **片尾網址 40 級字會超出 640 寬**被切掉左右兩端，字級要能個別指定。
 
 配樂用原版 MT-32 這件事，品質面照 `rulebook/93` 鐵則 1；散布面是鐵則但書提到的
 著作權問題，已提請使用者判斷，由其決定上傳。

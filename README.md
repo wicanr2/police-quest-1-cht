@@ -22,10 +22,10 @@ Lytton 這座加州小城的白天安靜得不像話：陽光、棕櫚樹、更�
 以及為了讓中文真的能顯示出來，在引擎裡修掉的六個顯示缺陷。現在它會講中文了，
 兩個版本都是。
 
-[![宣傳影片](workplace/captures/pq1-promo-thumb.png)](https://youtu.be/HXHRdbheqoE)
+[![宣傳影片](workplace/captures/pq1-promo-thumb.png)](https://youtu.be/uQCkoJ-XURY)
 
 56 秒，EGA 與 VGA 實機畫面交錯，配樂是原版 MT-32：
-**[youtu.be/HXHRdbheqoE](https://youtu.be/HXHRdbheqoE)**
+**[youtu.be/uQCkoJ-XURY](https://youtu.be/uQCkoJ-XURY)**
 
 ---
 
