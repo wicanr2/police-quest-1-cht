@@ -135,6 +135,24 @@ PERSONNEL 名單 20 列用 10px 行距，中文放不下（需要 300px、畫面
 - SCI 道具欄空的時候顯示 `You are carrying: nothing!`，是引擎硬編碼字串，
   抽字工具沒抓到，屬真實翻譯缺口但需另外 hook。
 
+## 防拷（copy protection）現況
+
+2026-07-30 重查結論：
+
+- **AGI 原版沒有防拷檢查。** ScummVM AGI 的 `copy_protection` 選項只在 `cycle.cpp`
+  被《Gold Rush!》讀取（room 125 ↔ 73），`detection_tables.h` 裡標 `_CP` 的也只有
+  `goldrush`；PQ1 的 DOS 條目用 `GAMEOPTIONS_DEFAULT`。抽字表裡也找不到任何
+  「documentation／manual」型的關卡字串。無線電通報由 parser 動詞觸發、遊戲自己組句。
+- **VGA 版有，而且不是可略過的關卡。** `message.200`（結局訊息庫）裡有
+  `This game upholds the law, partner. Come back when you find your documentation.`
+  ——這是查手冊型防拷的失敗結局。條號在通報案件與開單時要用，等於綁在主要玩法裡。
+  ScummVM SCI 沒有 `copy_protection` 選項，`script_patches.cpp` 的 `pq1vgaSignatures`
+  也沒有相關 patch，所以無從「關閉」。玩家要自備原版說明書。
+- **答案不進版控也不進交付包。** 使用者手上的 VGA repack 自帶 `SENHAS.TXT` 與
+  `protections/PQ1 VGA Codes.txt`（刑法條號、車輛法規條號、置物櫃 269），但整個
+  `workplace/original/` 被 `.gitignore` 第 2 行擋掉。已掃過 git 追蹤檔與 GitHub Release
+  上的三個包，條號字串與相關檔名命中皆為 0。
+
 ## 版本隔離
 
 - AGI：`original/agi`、`translation/agi-*`、`.build-agi-src`
