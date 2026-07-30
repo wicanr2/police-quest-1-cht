@@ -8,7 +8,10 @@
 - 工作目錄：`@./workplace`（`/home/anr2/scummvm/police_quest1/workplace`）。
 - 目標是可重建、可驗收、可公開分發的繁體中文 ScummVM patch。
 - 公開 repository 只放引擎 patch、工具、翻譯資料、字型、README、攻略與推廣素材。
-- **不得**提交原始 `RESOURCE.*`、`VOL.*`、`.DRV`、DOS executable、防拷答案或 MT-32 ROM。
+- **不得**提交原始 `RESOURCE.*`、`VOL.*`、`.DRV`、DOS executable 或 MT-32 ROM。
+- 防拷答案原本也在禁列，2026-07-30 依使用者決定放行 **VGA 版條號表**一項：它是查手冊型
+  防拷、綁在主要玩法裡，沒有條號玩不完，且條號是說明書上的參考資料而非遊戲程式碼或美術。
+  中譯版放 `docs/中文條號速查.md` 並隨包附上。**這是單點例外**，其餘防拷／破解素材照舊不收。
 - 玩家自行準備合法取得的原始遊戲資料；README 必須清楚說明 patch/full 差異。
 
 # github repo（只放 patch-only）

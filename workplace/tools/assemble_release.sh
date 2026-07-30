@@ -37,6 +37,10 @@ cp -a "$build_dir"/bin/. "$out/bin/"
 cp -a "$repo_root/README.md" "$out/README.md"
 cp -a "$workplace/CONTEXT.md" "$workplace/WORKLIST.md" "$out/"
 
+# VGA 版的防拷是查手冊型的，條號表隨包附上，否則玩家玩到拘留所登記就卡死。
+mkdir -p "$out/docs"
+cp -a "$repo_root/docs/中文條號速查.md" "$out/docs/"
+
 # README 內嵌的畫面也一起帶，否則包內的 README 全是破圖。只收它實際引用的那幾張。
 mkdir -p "$out/workplace/captures"
 grep -o 'workplace/captures/[^)]*\.png' "$out/README.md" | sort -u | while read -r shot; do

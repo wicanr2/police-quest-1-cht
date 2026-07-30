@@ -148,10 +148,17 @@ PERSONNEL 名單 20 列用 10px 行距，中文放不下（需要 300px、畫面
   ——這是查手冊型防拷的失敗結局。條號在通報案件與開單時要用，等於綁在主要玩法裡。
   ScummVM SCI 沒有 `copy_protection` 選項，`script_patches.cpp` 的 `pq1vgaSignatures`
   也沒有相關 patch，所以無從「關閉」。玩家要自備原版說明書。
-- **答案不進版控也不進交付包。** 使用者手上的 VGA repack 自帶 `SENHAS.TXT` 與
-  `protections/PQ1 VGA Codes.txt`（刑法條號、車輛法規條號、置物櫃 269），但整個
-  `workplace/original/` 被 `.gitignore` 第 2 行擋掉。已掃過 git 追蹤檔與 GitHub Release
-  上的三個包，條號字串與相關檔名命中皆為 0。
+- **條號表改為隨包附上（2026-07-30 使用者決定）。** 原本禁列，理由是沒有條號玩不完，
+  而條號是說明書上的參考資料、不是遊戲程式碼或美術。中譯版在 `docs/中文條號速查.md`，
+  `assemble_release.sh` 會複製進交付包的 `docs/`。`CLAUDE.md` 的邊界條款已同步改成
+  「單點例外」，其餘防拷／破解素材照舊不收——原始 `SENHAS.TXT` 與
+  `protections/PQ1 VGA Codes.txt` 仍隨 `workplace/original/` 被 gitignore 擋著。
+- **遊戲內指路。** `translation/batch/310-sci-code-hints.tsv` 在四句代碼相關對白後面
+  加了指路（三句指向速查表，拘留所問醉漢罪名那句直接標「酒後駕車 21603」）。
+  放在 batch 層是因為 `sci-translation.tsv` 每次都由 skeleton + batch 重新合成，
+  直接改檔會在下次 `build_targets.sh` 被蓋掉。
+  ⚠ 21603 是從遊戲自己的對白推的（Paul 說法官對 DUI 沒耐性、嫌犯「喝得很茫」），
+  沒有實機驗過——room 35 要有押解狀態才進得去，debugger 跳不進去。
 
 ## 版本隔離
 
