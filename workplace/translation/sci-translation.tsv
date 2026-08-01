@@ -3362,10 +3362,10 @@ If there's a stop sign or traffic light coming up at the intersection you're app
 This window displays your location at any time, relative to the Lytton street map.	這個視窗會隨時顯示你在 Lytton 街道地圖上的位置。
 Your speed is displayed here.	你的車速會顯示在這裡。
 If your siren is currently on, you'll see it flashing in this window.	如果你的警笛目前是開著的，這個視窗會出現閃爍畫面。
-NORTHBOUND ON	朝北行駛中
-SOUTHBOUND ON	朝南行駛中
-EASTBOUND ON	朝東行駛中
-WESTBOUND ON	朝西行駛中
+NORTHBOUND ON	北行 
+SOUTHBOUND ON	南行 
+EASTBOUND ON	東行 
+WESTBOUND ON	西行 
 83-32, please respond to complaint at Caffeine Carol's. Repeat, please respond to complaint at Caffeine Carol's.	83-32，請前往處理 Carol 咖啡城堡的投訴案件。重複，請前往處理 Carol 咖啡城堡的投訴案件。
 83-32, we have a complaint at Caffeine Carol's, Oak Street between 6th and 7th. Please investigate.	83-32，我們接獲 Carol 咖啡城堡的投訴，地點在 Oak 街，介於 6th 街與 7th 街之間。請前往調查。
 83-32, you are to prceed immediately to Cotton Cove to investigate possible 11-44. Repeat, 83-32 to Cotton Cove.	83-32，請立即前往 Cotton Cove 調查疑似 11-44 案件。重複，83-32 前往 Cotton Cove。
@@ -3494,7 +3494,7 @@ Entrance	入口
 Exit	出口
 ENTRANCE	入口
 EXIT	出口
-Lytton PD	Lytton 警局
+Lytton PD	警局
 County Jail	郡監獄
 Delphoria	Delphoria
 Carol's	Carol's
