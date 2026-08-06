@@ -4,6 +4,8 @@ name: build-cht-packages
 # 原始遊戲資料由玩家自備，永遠不進 repo 也不進 artifact。
 #
 # 只有 macOS 走 CI：Apple SDK 不能在 Linux 上交叉編譯，非得借 macos runner。
+# CI 只產 universal binary，不組包——中文資料的字型烘自使用者自有的倚天光碟，
+# 既不入 repo 也上不了 CI，組包一律在本機做（步驟寫在 upload-artifact 前）。
 # Linux 與 Windows（mingw-w64 交叉編譯）都在本機 Docker 建，見
 # workplace/docker/Dockerfile.mingw 與 workplace/tools/build_local_releases.sh。
 on:
@@ -18,81 +20,10 @@ env:
   SDL_VERSION: 2.30.9
 
 jobs:
-  # 中文資料只在 Linux 上烘一次，三平台共用同一份 artifact。各平台自己跑
-  # build_cht.py 會因為字型 rasterize 的環境差異產出不同的點陣字，共用才能保證一致。
-  data:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: 安裝字型與 Pillow
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends python3-pil fonts-arphic-uming
-
-      # 這裡刻意不重跑 merge_translation_layers.py：合併需要 gitignored 的
-      # extract/agi-object-skeleton.tsv 與 PQ2 的 prefill 來源，CI 上都沒有，
-      # 重跑只會產出比版控少的表。translation/*-translation.tsv 是版控的合併結果，
-      # 也是唯一真相；改了 translation/batch/ 要在本機跑 tools/build_targets.sh
-      # 重新合併後一起 commit。
-      - name: 烘中文資料與字型
-        working-directory: workplace
-        run: |
-          mkdir -p game/agi game/sci
-          python3 tools/build_cht.py translation/agi-translation.tsv game/agi \
-            --size 15 --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
-          python3 tools/build_cht.py translation/sci-translation.tsv game/sci \
-            --size 15 --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
-          python3 tools/bake_hires_font.py game/agi/pq1_big5_hi.fnt \
-            translation/agi-translation.tsv --size 27 --height 28 --width 32 \
-            --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
-          python3 tools/bake_hires_font.py game/sci/pq1_big5_hi.fnt \
-            translation/sci-translation.tsv --size 27 --height 28 --width 32 \
-            --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
-          python3 tools/build_title_overlay.py agi game/agi/pq1_title.ovl \
-            --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
-          python3 tools/build_title_overlay.py sci game/sci/pq1_title.ovl \
-            --font /usr/share/fonts/truetype/arphic/uming.ttc --face 2
-
-      - name: 驗證翻譯表與字型
-        working-directory: workplace
-        run: |
-          python3 tools/validate_translation.py translation/agi-translation.tsv
-          python3 tools/validate_translation.py translation/sci-translation.tsv
-          # 字型每字 2 + 15*2 bytes，高度必須與引擎 loadPrefixedRaw 的 15 相同，
-          # 對不上會逐筆錯位、大量缺字。這裡直接斷言檔案結構。
-          python3 - <<'EOF'
-          import struct, sys
-          for path, rec in (('game/agi/pq1_big5.fnt', 32), ('game/sci/pq1_big5.fnt', 32),
-                            ('game/agi/pq1_big5_hi.fnt', 114), ('game/sci/pq1_big5_hi.fnt', 114)):
-              data = open(path, 'rb').read()
-              if (len(data) - 2) % rec:
-                  sys.exit(f'{path}: 長度 {len(data)} 不是 {rec} bytes/字 的整數倍')
-              n, i = 0, 0
-              while i + 2 <= len(data):
-                  if struct.unpack_from('>H', data, i)[0] == 0xFFFF:
-                      break
-                  n += 1
-                  i += rec
-              print(f'{path}: {n} glyphs, {rec} bytes/字')
-          EOF
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cht-data
-          path: workplace/game/
-          retention-days: 14
-
   macos:
     runs-on: macos-14
-    needs: data
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: cht-data
-          path: workplace/game
 
       # brew 的 sdl2 現在是 sdl2-compat（SDL3 shim），ScummVM 連上去會黑畫面。
       # 自編 pinned 真 SDL2，兩個弧各一份 prefix。
@@ -157,11 +88,13 @@ jobs:
           done
           echo "universal 雙弧驗證通過"
 
-      - name: 組裝 patch 包
-        run: bash workplace/tools/assemble_release.sh out macos-universal
-
+      # 只出 binary。中文資料(字型從使用者自有的倚天光碟烘出來)不進 repo 也不進 CI,
+      # 所以組包一律在本機做:
+      #   gh run download <id> -D /tmp/pq1-mac
+      #   mkdir -p .build-macos/bin && cp /tmp/pq1-mac/pq1-cht-macos-bin/* .build-macos/bin/
+      #   PQ1_DIST_DIR=$PWD/dist-all sh tools/assemble_release.sh .build-macos macos-universal
       - uses: actions/upload-artifact@v4
         with:
-          name: pq1-cht-macos-universal
-          path: dist-all/*
+          name: pq1-cht-macos-bin
+          path: out/bin/*
           retention-days: 30
