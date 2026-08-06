@@ -1,6 +1,6 @@
-diff -urN b/engines/sci/console.cpp m/engines/sci/console.cpp
---- a/engines/sci/console.cpp	2026-07-27 04:42:05.325357280 +0000
-+++ b/engines/sci/console.cpp	2026-07-27 04:42:05.327400628 +0000
+diff -urN a/engines/sci/console.cpp b/engines/sci/console.cpp
+--- a/engines/sci/console.cpp	2026-08-06 08:20:50.513077689 +0000
++++ b/engines/sci/console.cpp	2026-08-06 08:20:50.916353027 +0000
 @@ -1157,6 +1157,17 @@
  		Common::String roomNumberStr = argv[1];
  		int roomNumber = strtol(roomNumberStr.c_str(), nullptr, roomNumberStr.hasSuffix("h") ? 16 : 10);
@@ -19,9 +19,9 @@ diff -urN b/engines/sci/console.cpp m/engines/sci/console.cpp
  		debugPrintf("Room number changed to %d (%x in hex)\n", roomNumber, roomNumber);
  	}
  
-diff -urN b/engines/sci/engine/kstring.cpp m/engines/sci/engine/kstring.cpp
---- a/engines/sci/engine/kstring.cpp	2026-07-27 04:42:05.330158396 +0000
-+++ b/engines/sci/engine/kstring.cpp	2026-07-27 04:42:05.330357345 +0000
+diff -urN a/engines/sci/engine/kstring.cpp b/engines/sci/engine/kstring.cpp
+--- a/engines/sci/engine/kstring.cpp	2026-08-06 08:20:50.520620456 +0000
++++ b/engines/sci/engine/kstring.cpp	2026-08-06 08:20:50.587027668 +0000
 @@ -207,6 +207,58 @@
  }
  
@@ -139,9 +139,9 @@ diff -urN b/engines/sci/engine/kstring.cpp m/engines/sci/engine/kstring.cpp
  				int slen = tempsource.size();
  				int extralen = strLength - slen;
  				assert((target - targetbuf) + extralen <= maxsize);
-diff -urN b/engines/sci/event.cpp m/engines/sci/event.cpp
---- a/engines/sci/event.cpp	2026-07-27 04:42:05.333809026 +0000
-+++ b/engines/sci/event.cpp	2026-07-27 04:42:05.334715657 +0000
+diff -urN a/engines/sci/event.cpp b/engines/sci/event.cpp
+--- a/engines/sci/event.cpp	2026-08-06 08:20:50.526243028 +0000
++++ b/engines/sci/event.cpp	2026-08-06 08:20:50.797777990 +0000
 @@ -422,6 +422,16 @@
  		input.type = kSciEventKeyDown;
  	}
@@ -159,9 +159,9 @@ diff -urN b/engines/sci/event.cpp m/engines/sci/event.cpp
  	return input;
  }
  
-diff -urN b/engines/sci/graphics/cache.cpp m/engines/sci/graphics/cache.cpp
---- a/engines/sci/graphics/cache.cpp	2026-07-27 04:42:05.337749932 +0000
-+++ b/engines/sci/graphics/cache.cpp	2026-07-27 04:42:05.338676146 +0000
+diff -urN a/engines/sci/graphics/cache.cpp b/engines/sci/graphics/cache.cpp
+--- a/engines/sci/graphics/cache.cpp	2026-08-06 08:20:50.527202323 +0000
++++ b/engines/sci/graphics/cache.cpp	2026-08-06 08:20:50.683665329 +0000
 @@ -30,6 +30,7 @@
  #include "sci/graphics/scifont.h"
  #include "sci/graphics/fontsjis.h"
@@ -181,9 +181,9 @@ diff -urN b/engines/sci/graphics/cache.cpp m/engines/sci/graphics/cache.cpp
  		else
  			_cachedFonts[fontId] = new GfxFontFromResource(_resMan, _screen, fontId);
  	}
-diff -urN b/engines/sci/graphics/menu.cpp m/engines/sci/graphics/menu.cpp
---- a/engines/sci/graphics/menu.cpp	2026-07-27 04:42:05.341513037 +0000
-+++ b/engines/sci/graphics/menu.cpp	2026-07-27 04:42:05.342275706 +0000
+diff -urN a/engines/sci/graphics/menu.cpp b/engines/sci/graphics/menu.cpp
+--- a/engines/sci/graphics/menu.cpp	2026-08-06 08:20:50.538121923 +0000
++++ b/engines/sci/graphics/menu.cpp	2026-08-06 08:20:50.724455863 +0000
 @@ -363,10 +363,12 @@
  	_paint16->fillRect(_ports->_menuBarRect, 1, _screen->getColorWhite());
  	_paint16->fillRect(_ports->_menuLine, 1, 0);
@@ -212,9 +212,9 @@ diff -urN b/engines/sci/graphics/menu.cpp m/engines/sci/graphics/menu.cpp
  	} else {
  		int16 textWidth;
  		int16 textHeight;
-diff -urN b/engines/sci/graphics/paint16.cpp m/engines/sci/graphics/paint16.cpp
---- a/engines/sci/graphics/paint16.cpp	2026-07-27 04:42:05.344660794 +0000
-+++ b/engines/sci/graphics/paint16.cpp	2026-07-27 04:42:05.345390238 +0000
+diff -urN a/engines/sci/graphics/paint16.cpp b/engines/sci/graphics/paint16.cpp
+--- a/engines/sci/graphics/paint16.cpp	2026-08-06 08:20:50.538638532 +0000
++++ b/engines/sci/graphics/paint16.cpp	2026-08-06 08:20:50.796012760 +0000
 @@ -19,6 +19,8 @@
   *
   */
@@ -385,9 +385,9 @@ diff -urN b/engines/sci/graphics/paint16.cpp m/engines/sci/graphics/paint16.cpp
  	// Kawa's SCI11+
  	if (stroke)
  		rect.grow(1);
-diff -urN b/engines/sci/graphics/paint16.h m/engines/sci/graphics/paint16.h
---- a/engines/sci/graphics/paint16.h	2026-07-27 04:42:05.348114904 +0000
-+++ b/engines/sci/graphics/paint16.h	2026-07-27 04:42:05.349001751 +0000
+diff -urN a/engines/sci/graphics/paint16.h b/engines/sci/graphics/paint16.h
+--- a/engines/sci/graphics/paint16.h	2026-08-06 08:20:50.538893974 +0000
++++ b/engines/sci/graphics/paint16.h	2026-08-06 08:20:50.795565810 +0000
 @@ -96,6 +96,22 @@
  	GfxText16 *_text16;
  	GfxTransitions *_transitions;
@@ -411,9 +411,9 @@ diff -urN b/engines/sci/graphics/paint16.h m/engines/sci/graphics/paint16.h
  	// true means make EGA picture drawing visible
  	bool _EGAdrawingVisualize;
  
-diff -urN b/engines/sci/graphics/ports.cpp m/engines/sci/graphics/ports.cpp
---- a/engines/sci/graphics/ports.cpp	2026-07-27 04:42:05.351465764 +0000
-+++ b/engines/sci/graphics/ports.cpp	2026-07-27 04:42:05.352189899 +0000
+diff -urN a/engines/sci/graphics/ports.cpp b/engines/sci/graphics/ports.cpp
+--- a/engines/sci/graphics/ports.cpp	2026-08-06 08:20:50.542225078 +0000
++++ b/engines/sci/graphics/ports.cpp	2026-08-06 08:20:50.725160880 +0000
 @@ -62,9 +62,13 @@
  	setPort(_menuPort);
  	_text16->SetFont(0);
@@ -431,9 +431,9 @@ diff -urN b/engines/sci/graphics/ports.cpp m/engines/sci/graphics/ports.cpp
  
  	_wmgrPort = new Port(1);
  	_windowsById.resize(2);
-diff -urN b/engines/sci/graphics/screen.cpp m/engines/sci/graphics/screen.cpp
---- a/engines/sci/graphics/screen.cpp	2026-07-27 04:42:05.354472482 +0000
-+++ b/engines/sci/graphics/screen.cpp	2026-07-27 04:42:05.355544203 +0000
+diff -urN a/engines/sci/graphics/screen.cpp b/engines/sci/graphics/screen.cpp
+--- a/engines/sci/graphics/screen.cpp	2026-08-06 08:20:50.544582645 +0000
++++ b/engines/sci/graphics/screen.cpp	2026-08-06 08:20:50.730622413 +0000
 @@ -84,6 +84,14 @@
  		}
  	}
@@ -449,9 +449,9 @@ diff -urN b/engines/sci/graphics/screen.cpp m/engines/sci/graphics/screen.cpp
  	// if not yet set, set those to script-width/height
  	if (!_width)
  		_width = _scriptWidth;
-diff -urN b/engines/sci/graphics/screen.h m/engines/sci/graphics/screen.h
---- a/engines/sci/graphics/screen.h	2026-07-27 04:42:05.358155862 +0000
-+++ b/engines/sci/graphics/screen.h	2026-07-27 04:42:05.358939493 +0000
+diff -urN a/engines/sci/graphics/screen.h b/engines/sci/graphics/screen.h
+--- a/engines/sci/graphics/screen.h	2026-08-06 08:20:50.544861998 +0000
++++ b/engines/sci/graphics/screen.h	2026-08-06 08:20:50.734340076 +0000
 @@ -78,6 +78,7 @@
  	uint16 getScriptHeight() { return _scriptHeight; }
  	uint16 getDisplayWidth() { return _displayWidth; }
@@ -460,9 +460,9 @@ diff -urN b/engines/sci/graphics/screen.h m/engines/sci/graphics/screen.h
  	byte getColorWhite() { return _colorWhite; }
  	byte getColorDefaultVectorData() { return _colorDefaultVectorData; }
  
-diff -urN b/engines/sci/graphics/text16.cpp m/engines/sci/graphics/text16.cpp
---- a/engines/sci/graphics/text16.cpp	2026-07-27 04:42:05.361716127 +0000
-+++ b/engines/sci/graphics/text16.cpp	2026-07-27 04:42:05.362539815 +0000
+diff -urN a/engines/sci/graphics/text16.cpp b/engines/sci/graphics/text16.cpp
+--- a/engines/sci/graphics/text16.cpp	2026-08-06 08:20:50.545620638 +0000
++++ b/engines/sci/graphics/text16.cpp	2026-08-06 08:20:50.795017015 +0000
 @@ -303,7 +303,21 @@
  		// Break without spaces found, we split the very first word - may also be Kanji/Japanese
  
@@ -595,9 +595,9 @@ diff -urN b/engines/sci/graphics/text16.cpp m/engines/sci/graphics/text16.cpp
  		switch (curChar) {
  		case 0:
  			break;
-diff -urN b/engines/sci/graphics/view.cpp m/engines/sci/graphics/view.cpp
---- a/engines/sci/graphics/view.cpp	2026-07-27 04:42:05.364357787 +0000
-+++ b/engines/sci/graphics/view.cpp	2026-07-27 04:42:05.366120837 +0000
+diff -urN a/engines/sci/graphics/view.cpp b/engines/sci/graphics/view.cpp
+--- a/engines/sci/graphics/view.cpp	2026-08-06 08:20:50.548535384 +0000
++++ b/engines/sci/graphics/view.cpp	2026-08-06 08:20:50.736513638 +0000
 @@ -19,6 +19,8 @@
   *
   */
@@ -666,9 +666,9 @@ diff -urN b/engines/sci/graphics/view.cpp m/engines/sci/graphics/view.cpp
  	const byte drawMask = priority > 15 ? GFX_SCREEN_MASK_VISUAL : GFX_SCREEN_MASK_VISUAL|GFX_SCREEN_MASK_PRIORITY;
  
  	if (_embeddedPal)
-diff -urN b/engines/sci/graphics/view.h m/engines/sci/graphics/view.h
---- a/engines/sci/graphics/view.h	2026-07-27 04:42:05.368773110 +0000
-+++ b/engines/sci/graphics/view.h	2026-07-27 04:42:05.369532606 +0000
+diff -urN a/engines/sci/graphics/view.h b/engines/sci/graphics/view.h
+--- a/engines/sci/graphics/view.h	2026-08-06 08:20:50.548832878 +0000
++++ b/engines/sci/graphics/view.h	2026-08-06 08:20:50.740796075 +0000
 @@ -75,6 +75,9 @@
  	uint16 getCelCount(int16 loopNo) const;
  	Palette *getPalette();
@@ -679,9 +679,9 @@ diff -urN b/engines/sci/graphics/view.h m/engines/sci/graphics/view.h
  	bool isScaleable();
  
  	void adjustToUpscaledCoordinates(int16 &y, int16 &x);
-diff -urN b/engines/sci/module.mk m/engines/sci/module.mk
---- a/engines/sci/module.mk	2026-07-27 04:42:05.372169667 +0000
-+++ b/engines/sci/module.mk	2026-07-27 04:42:05.373003471 +0000
+diff -urN a/engines/sci/module.mk b/engines/sci/module.mk
+--- a/engines/sci/module.mk	2026-08-06 08:20:50.549305026 +0000
++++ b/engines/sci/module.mk	2026-08-06 08:20:50.797027494 +0000
 @@ -48,6 +48,7 @@
  	graphics/controls16.o \
  	graphics/coordadjuster.o \
@@ -690,9 +690,9 @@ diff -urN b/engines/sci/module.mk m/engines/sci/module.mk
  	graphics/fontkorean.o \
  	graphics/fontsjis.o \
  	graphics/macfont.o \
-diff -urN b/engines/sci/sci.cpp m/engines/sci/sci.cpp
---- a/engines/sci/sci.cpp	2026-07-27 04:42:05.375537184 +0000
-+++ b/engines/sci/sci.cpp	2026-07-27 04:42:05.376409027 +0000
+diff -urN a/engines/sci/sci.cpp b/engines/sci/sci.cpp
+--- a/engines/sci/sci.cpp	2026-08-06 08:20:50.553323730 +0000
++++ b/engines/sci/sci.cpp	2026-08-06 08:20:50.796617908 +0000
 @@ -19,7 +19,11 @@
   *
   */
@@ -768,7 +768,7 @@ diff -urN b/engines/sci/sci.cpp m/engines/sci/sci.cpp
  #ifdef ENABLE_SCI32
  	if (getSciVersion() >= SCI_VERSION_2) {
  		// SCI32 graphic objects creation
-@@ -831,7 +877,93 @@
+@@ -831,7 +877,102 @@
  	return _gameDescription->gameId;
  }
  
@@ -808,6 +808,15 @@ diff -urN b/engines/sci/sci.cpp m/engines/sci/sci.cpp
 +static Common::String unescapeCht(const Common::String &in) {
 +	Common::String out;
 +	for (uint i = 0; i < in.size(); ++i) {
++		// CHT: Big5 的 trail byte 可能是 0x5C,先整字複製,免得它被當成下面 escape 的
++		// 引導字元。例:「餐」(C0 5C) 後面接 `\n` 時,5C 會與後面的 `\` 配對成 `\\`,
++		// 吃掉半個字(jones_in_the_fast_lane 有實例)。翻譯檔一定是 Big5,不必看語言設定。
++		if ((byte)in[i] >= 0x81 && (byte)in[i] <= 0xFE && i + 1 < in.size()) {
++			out += in[i];
++			out += in[i + 1];
++			++i;
++			continue;
++		}
 +		if (in[i] == '\\' && i + 1 < in.size()) {
 +			char n = in[i + 1];
 +			if (n == 'n') { out += '\n'; ++i; continue; }
@@ -862,7 +871,7 @@ diff -urN b/engines/sci/sci.cpp m/engines/sci/sci.cpp
  	return _gameDescription->language;
  }
  
-@@ -943,6 +1075,77 @@
+@@ -943,6 +1084,77 @@
  			"for Quest for Glory 2. Example: 'qfg2-thief.sav'."));
  }
  
@@ -940,9 +949,9 @@ diff -urN b/engines/sci/sci.cpp m/engines/sci/sci.cpp
  void SciEngine::sleep(uint32 msecs) {
  	if (!msecs) {
  		return;
-diff -urN b/engines/sci/sci.h m/engines/sci/sci.h
---- a/engines/sci/sci.h	2026-07-27 04:42:05.378357969 +0000
-+++ b/engines/sci/sci.h	2026-07-27 04:42:05.379357982 +0000
+diff -urN a/engines/sci/sci.h b/engines/sci/sci.h
+--- a/engines/sci/sci.h	2026-08-06 08:20:50.553571659 +0000
++++ b/engines/sci/sci.h	2026-08-06 08:20:50.820351731 +0000
 @@ -26,6 +26,8 @@
  #include "common/macresman.h"
  #include "common/util.h"
